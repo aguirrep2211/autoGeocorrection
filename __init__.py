@@ -1,3 +1,3 @@
 def classFactory(iface):
-    from .plugin import MiPluginQGIS
-    return MiPluginQGIS(iface)
+    from .autogeoreferencer import AutogeoreferencerPlugin
+    return AutogeoreferencerPlugin(iface)

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>Pablo Iglesias</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>600</height>
+    <width>1074</width>
+    <height>733</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,14 +23,80 @@
   <property name="statusBar" stdset="0">
    <cstring>statusbar</cstring>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QFrame" name="frame_image">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>511</width>
+      <height>401</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnCargarReferencia">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>60</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cargar imagen a referenciar</string>
+    </property>
+   </widget>
+   <widget class="QMdiArea" name="mdiArea">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>420</y>
+      <width>661</width>
+      <height>261</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnCargarFlotante">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>10</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cargar Imagen de referencia</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="img_from_basemap">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>110</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cargar referencia desde base map</string>
+    </property>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>900</width>
-     <height>24</height>
+     <width>1074</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuArchivo">
@@ -63,29 +130,6 @@
    <addaction name="menuConfiguracion"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="mainToolBar">
-   <property name="windowTitle">
-    <string>Herramientas</string>
-   </property>
-   <property name="movable">
-    <bool>true</bool>
-   </property>
-   <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextUnderIcon</enum>
-   </property>
-   <property name="cargar desde Qgis" stdset="0">
-    <string/>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionCargarImagenGeorreferenciar"/>
-   <addaction name="actionCargarImagenReferencia"/>
-   <addaction name="separator"/>
-  </widget>
   <action name="actionNuevo">
    <property name="text">
     <string>&amp;Nuevo</string>
@@ -146,7 +190,6 @@
     <string>Selecciona la ortofoto/raster con CRS de referencia</string>
    </property>
   </action>
-  <!-- NUEVA acción para tu método get_from_mian_screen -->
   <action name="actionGetFromMainScreen">
    <property name="text">
     <string>Capturar desde pantalla</string>
@@ -154,10 +197,26 @@
    <property name="toolTip">
     <string>Selecciona un rectángulo en el mapa principal de QGIS y captura la vista</string>
    </property>
-   <!-- (opcional) atajo -->
-   <!-- <property name="shortcut"><string>Ctrl+Shift+C</string></property> -->
   </action>
  </widget>
+ <layoutdefault spacing="6" margin="9"/>
  <resources/>
  <connections/>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>10</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
 </ui>

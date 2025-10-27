@@ -1,0 +1,12 @@
+[general]
+name=Autogeoreferencer
+description=Plugin para cargar y georreferenciar imágenes ráster.
+version=0.1.0
+qgisMinimumVersion=3.22
+qgisMaximumVersion=3.99
+author=Pablo Iglesias
+email=geormedb@gmail.com
+category=Raster
+about=Ventana Qt personalizada que abre el Administrador de Fuentes (Ráster).
+experimental=True
+deprecated=False

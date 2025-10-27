@@ -34,3 +34,11 @@ class AutogeoreferencerPlugin(QObject):
 # 🚀 Esta función es obligatoria en todo plugin QGIS
 def classFactory(iface):
     return AutogeoreferencerPlugin(iface)
+
+if __name__ == "__main__":
+    from qgis.PyQt.QtWidgets import QApplication
+    import sys
+    app = QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec_())
