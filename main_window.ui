@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1074</width>
-    <height>733</height>
+    <width>1012</width>
+    <height>1181</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,12 +24,12 @@
    <cstring>statusbar</cstring>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QFrame" name="frame_image">
+   <widget class="QFrame" name="frame_image_ortorect">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>511</width>
+      <x>10</x>
+      <y>70</y>
+      <width>481</width>
       <height>401</height>
      </rect>
     </property>
@@ -43,9 +43,9 @@
    <widget class="QPushButton" name="btnCargarReferencia">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>60</y>
-      <width>201</width>
+      <x>330</x>
+      <y>10</y>
+      <width>331</width>
       <height>41</height>
      </rect>
     </property>
@@ -53,22 +53,12 @@
      <string>Cargar imagen a referenciar</string>
     </property>
    </widget>
-   <widget class="QMdiArea" name="mdiArea">
-    <property name="geometry">
-     <rect>
-      <x>250</x>
-      <y>420</y>
-      <width>661</width>
-      <height>261</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="btnCargarFlotante">
     <property name="geometry">
      <rect>
-      <x>860</x>
+      <x>20</x>
       <y>10</y>
-      <width>201</width>
+      <width>301</width>
       <height>41</height>
      </rect>
     </property>
@@ -79,14 +69,131 @@
    <widget class="QPushButton" name="img_from_basemap">
     <property name="geometry">
      <rect>
-      <x>860</x>
-      <y>110</y>
-      <width>201</width>
+      <x>670</x>
+      <y>10</y>
+      <width>331</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>Cargar referencia desde base map</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_imagen_toortorect">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>70</y>
+      <width>481</width>
+      <height>401</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>580</y>
+      <width>171</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>Method 1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Method 2</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>710</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>get matches</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_calcs">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>500</y>
+      <width>811</width>
+      <height>341</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="toolButton">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>710</y>
+      <width>24</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>480</y>
+      <width>1011</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>870</y>
+      <width>1011</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>560</x>
+      <y>850</y>
+      <width>441</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>24</number>
     </property>
    </widget>
   </widget>
@@ -95,7 +202,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1074</width>
+     <width>1012</width>
      <height>22</height>
     </rect>
    </property>
@@ -103,31 +210,51 @@
     <property name="title">
      <string>&amp;Archivo</string>
     </property>
+    <widget class="QMenu" name="menu_EXportar">
+     <property name="title">
+      <string>&amp;Exportar</string>
+     </property>
+     <addaction name="actionimagenortorectificada"/>
+     <addaction name="actiongroun_control_points"/>
+     <addaction name="actionmatrix_transformation"/>
+    </widget>
+    <widget class="QMenu" name="menu_Abrir">
+     <property name="title">
+      <string>&amp;Abrir…</string>
+     </property>
+     <addaction name="actionImagen_de_referencia"/>
+     <addaction name="actionMDE"/>
+    </widget>
     <addaction name="actionNuevo"/>
-    <addaction name="actionAbrir"/>
-    <addaction name="actionGuardar"/>
+    <addaction name="menu_Abrir"/>
+    <addaction name="menu_EXportar"/>
     <addaction name="separator"/>
     <addaction name="actionSalir"/>
-   </widget>
-   <widget class="QMenu" name="menuEditar">
-    <property name="title">
-     <string>&amp;Editar</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuVer">
-    <property name="title">
-     <string>&amp;Ver</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menuConfiguracion">
     <property name="title">
      <string>Con&amp;figuración</string>
     </property>
+    <widget class="QMenu" name="menuM_todos">
+     <property name="title">
+      <string>Métodos</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionMetodo1"/>
+     <addaction name="actionMetodo2"/>
+     <addaction name="actionMetodo3"/>
+    </widget>
+    <addaction name="separator"/>
+    <addaction name="menuM_todos"/>
+   </widget>
+   <widget class="QMenu" name="menuBatch_processing">
+    <property name="title">
+     <string>Batch processing</string>
+    </property>
    </widget>
    <addaction name="menuArchivo"/>
-   <addaction name="menuEditar"/>
-   <addaction name="menuVer"/>
    <addaction name="menuConfiguracion"/>
+   <addaction name="menuBatch_processing"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNuevo">
@@ -139,28 +266,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="actionAbrir">
-   <property name="text">
-    <string>&amp;Abrir…</string>
-   </property>
-   <property name="statusTip">
-    <string>Abrir archivo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionGuardar">
-   <property name="text">
-    <string>&amp;Guardar</string>
-   </property>
-   <property name="statusTip">
-    <string>Guardar archivo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionSalir">
@@ -196,6 +301,56 @@
    </property>
    <property name="toolTip">
     <string>Selecciona un rectángulo en el mapa principal de QGIS y captura la vista</string>
+   </property>
+  </action>
+  <action name="actionMetodo1">
+   <property name="text">
+    <string>Metodo1</string>
+   </property>
+  </action>
+  <action name="actionMetodo2">
+   <property name="text">
+    <string>Metodo2</string>
+   </property>
+  </action>
+  <action name="actionMetodo3">
+   <property name="text">
+    <string>Metodo3</string>
+   </property>
+  </action>
+  <action name="actionExportar_img">
+   <property name="text">
+    <string>Exportar img</string>
+   </property>
+  </action>
+  <action name="actionExportar_matrix">
+   <property name="text">
+    <string>Exportar matrix</string>
+   </property>
+  </action>
+  <action name="actionimagenortorectificada">
+   <property name="text">
+    <string>imagenortorectificada</string>
+   </property>
+  </action>
+  <action name="actiongroun_control_points">
+   <property name="text">
+    <string>groun control points</string>
+   </property>
+  </action>
+  <action name="actionmatrix_transformation">
+   <property name="text">
+    <string>matrix transformation</string>
+   </property>
+  </action>
+  <action name="actionImagen_de_referencia">
+   <property name="text">
+    <string>Imagen de referencia</string>
+   </property>
+  </action>
+  <action name="actionMDE">
+   <property name="text">
+    <string>MDE</string>
    </property>
   </action>
  </widget>
