@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
         self.progressBar.setObjectName("progressBar")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1012, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1012, 24))
         self.menubar.setObjectName("menubar")
         self.menuArchivo = QtWidgets.QMenu(self.menubar)
         self.menuArchivo.setObjectName("menuArchivo")
@@ -121,11 +121,14 @@ class Ui_MainWindow(object):
         self.actionImagen_de_referencia.setObjectName("actionImagen_de_referencia")
         self.actionMDE = QtWidgets.QAction(MainWindow)
         self.actionMDE.setObjectName("actionMDE")
+        self.actioncargar_desde_base_map = QtWidgets.QAction(MainWindow)
+        self.actioncargar_desde_base_map.setObjectName("actioncargar_desde_base_map")
         self.menu_EXportar.addAction(self.actionimagenortorectificada)
         self.menu_EXportar.addAction(self.actiongroun_control_points)
         self.menu_EXportar.addAction(self.actionmatrix_transformation)
         self.menu_Abrir.addAction(self.actionImagen_de_referencia)
         self.menu_Abrir.addAction(self.actionMDE)
+        self.menu_Abrir.addAction(self.actioncargar_desde_base_map)
         self.menuArchivo.addAction(self.actionNuevo)
         self.menuArchivo.addAction(self.menu_Abrir.menuAction())
         self.menuArchivo.addAction(self.menu_EXportar.menuAction())
@@ -187,13 +190,4 @@ class Ui_MainWindow(object):
         self.actionmatrix_transformation.setText(_translate("MainWindow", "matrix transformation"))
         self.actionImagen_de_referencia.setText(_translate("MainWindow", "Imagen de referencia"))
         self.actionMDE.setText(_translate("MainWindow", "MDE"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        self.actioncargar_desde_base_map.setText(_translate("MainWindow", "cargar desde base map"))

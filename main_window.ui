@@ -203,7 +203,7 @@
      <x>0</x>
      <y>0</y>
      <width>1012</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuArchivo">
@@ -224,6 +224,7 @@
      </property>
      <addaction name="actionImagen_de_referencia"/>
      <addaction name="actionMDE"/>
+     <addaction name="actioncargar_desde_base_map"/>
     </widget>
     <addaction name="actionNuevo"/>
     <addaction name="menu_Abrir"/>
@@ -351,6 +352,11 @@
   <action name="actionMDE">
    <property name="text">
     <string>MDE</string>
+   </property>
+  </action>
+  <action name="actioncargar_desde_base_map">
+   <property name="text">
+    <string>cargar desde base map</string>
    </property>
   </action>
  </widget>

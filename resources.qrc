@@ -1,0 +1,6 @@
+<RCC version="1.0">
+  <qresource prefix="/">
+    <file>icons/add.svg</file>
+    <!-- elimina o corrige cualquier <file> que no exista -->
+  </qresource>
+</RCC>
