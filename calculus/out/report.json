@@ -1,0 +1,16 @@
+{
+  "best": {},
+  "report": {
+    "grid_size": 1,
+    "cv_mode": "kfold",
+    "n_splits": 2,
+    "best_cv_mean_cost": -749.4259085998908,
+    "ranking": [
+      {
+        "params": {},
+        "val_mean_cost": -749.4259085998908,
+        "val_std_cost": 501.57409140010924
+      }
+    ]
+  }
+}

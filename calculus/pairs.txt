@@ -1,0 +1,2 @@
+/home/pablo/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Autogeoreferencer/data/A1.png,/home/pablo/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Autogeoreferencer/data/A2.png
+/home/pablo/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Autogeoreferencer/data/B1.png,/home/pablo/.local/share/QGIS/QGIS3/profiles/default/python/plugins/Autogeoreferencer/data/B2.png
