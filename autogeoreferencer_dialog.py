@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-
 import os
 import shutil
 import tempfile
-
-from typing import Optional
+from typing import Optional, List
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import Qt
@@ -18,7 +16,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.core import (
     QgsProject, QgsRasterLayer, QgsRectangle, QgsCoordinateTransform,
     QgsCoordinateReferenceSystem, QgsWkbTypes, QgsGeometry, QgsMapSettings,
-    QgsMapRendererCustomPainterJob
+    QgsMapRendererCustomPainterJob, QgsApplication
 )
 from qgis.gui import QgsMapTool, QgsMapCanvas, QgsRubberBand
 
@@ -28,10 +26,11 @@ try:
 except Exception:
     from qgis.PyQt.QtGui import QAction      # PySide6 fallback
 
-# UI generada desde Qt Designer (asegúrate de compilar ui -> py)
+# UI generada desde Qt Designer
 from .ui_main_window import Ui_MainWindow
 
-# =========================== Herramienta Rectángulo ============================
+
+# =========================== Herramienta Rectángulo (AOI en canvas del QGIS) ============================
 class RectangleMapTool(QgsMapTool):
     """Herramienta para dibujar un rectángulo y devolver QgsRectangle vía callback."""
     def __init__(self, canvas: QgsMapCanvas, callback):
@@ -68,7 +67,8 @@ class RectangleMapTool(QgsMapTool):
         finally:
             super().deactivate()
 
-# =============================== Ventana principal ===============================
+
+# ======================================== Ventana principal ============================================
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, iface=None, parent=None):
         super().__init__(parent)
@@ -76,230 +76,216 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("Autogeoreferencer")
 
-        # Canvas y herramienta de selección
-        self.canvas: Optional[QgsMapCanvas] = self.iface.mapCanvas() if self.iface else None
-        self.tool_rectangle: Optional[RectangleMapTool] = RectangleMapTool(self.canvas, self._on_rectangle_selected) if self.canvas else None
+        # --- Canvases embebidos en la UI (placeholders del .ui) ---
+        self.canvasFloat = QgsMapCanvas(self)      # muestra 'flotante'
+        self.canvasRef = QgsMapCanvas(self)        # muestra 'referencia'
+        self.canvasOver = QgsMapCanvas(self)       # superposición (usamos opacidad con setLayerOpacity)
+        self._mount_canvas(self.canvasFloating, self.canvasFloat)
+        self._mount_canvas(self.canvasReference, self.canvasRef)
+        self._mount_canvas(self.canvasOverlay, self.canvasOver)
 
-        # Estado
+        # Herramienta rectángulo sobre el canvas principal del proyecto (no los embebidos)
+        self.canvas_project: Optional[QgsMapCanvas] = self.iface.mapCanvas() if self.iface else None
+        self.tool_rectangle: Optional[RectangleMapTool] = (
+            RectangleMapTool(self.canvas_project, self._on_rectangle_selected) if self.canvas_project else None
+        )
+
+        # --- Estado ---
         self._basemap_layer: Optional[QgsRasterLayer] = None
-        self._current_reference_image: Optional[str] = None   # imagen temporal seleccionada por el usuario
-        self._base_pixmap: Optional[QtGui.QPixmap] = None     # pixmap para la preview
-        self._preview_label: Optional[QLabel] = None
+        self._floating_layer: Optional[QgsRasterLayer] = None
+        self._reference_layer: Optional[QgsRasterLayer] = None
+        self._last_clip_layer_id: Optional[str] = None
+        self._current_reference_image: Optional[str] = None
 
-        # Contenedor de previsualización (tu requerimiento)
-        self._preview_frame = self._find_preview_frame()
-        self._init_preview_label()
-
-        # Enlazar señales UI
+        # Conectar señales UI y acciones
         self._wire_signals()
+        self._set_icons()
 
-        # Redibujar preview al redimensionar
-        self.installEventFilter(self)
+        # Stepper → stacked
+        self.listSteps.itemSelectionChanged.connect(self._sync_step_from_list)
+        # Selecciona el primer paso por defecto
+        self.listSteps.setCurrentRow(0)
+        self.stackSteps.setCurrentIndex(0)
 
-    # ------------------- UI wiring -------------------
+        # Redibujar overlay con slider
+        self.sliderOpacity.valueChanged.connect(self._on_overlay_opacity_changed)
+
+        # Estadísticas iniciales
+        self._update_quick_stats(crs="-", transform="-", gcp=0, rmse="-")
+
+    # -------------------------------- Iconos QGIS theme --------------------------------
+    def _set_icons(self):
+        self.actionLoadFloating.setIcon(QgsApplication.getThemeIcon("mActionAddRasterLayer.svg"))
+        self.actionLoadReference.setIcon(QgsApplication.getThemeIcon("mActionAddOgrLayer.svg"))
+        self.actionPickBasemap.setIcon(QgsApplication.getThemeIcon("mActionAddWmsLayer.svg"))
+        self.actionDrawAOI.setIcon(QgsApplication.getThemeIcon("mActionSelectRectangle.svg"))
+        self.actionRun.setIcon(QgsApplication.getThemeIcon("mActionStart.svg"))
+        self.actionStop.setIcon(QgsApplication.getThemeIcon("mActionStopEditing.svg"))
+        self.actionClear.setIcon(QgsApplication.getThemeIcon("mActionTrash.svg"))
+        self.actionExportOrtho.setIcon(QgsApplication.getThemeIcon("mActionFileSave.svg"))
+        self.actionExportReport.setIcon(QgsApplication.getThemeIcon("mActionSaveAsPDF.svg"))
+
+    # -------------------------------- Wiring --------------------------------
     def _wire_signals(self):
-        # Fijar base -> salir de selección
-        btn_fijar = getattr(self, "btnFijarBase", None)
-        if isinstance(btn_fijar, QPushButton):
-            btn_fijar.clicked.connect(self._on_fijar_base_clicked)
+        # Toolbar / acciones
+        self.actionLoadFloating.triggered.connect(self._on_load_floating)
+        self.actionLoadReference.triggered.connect(self._on_load_reference)
+        self.actionPickBasemap.triggered.connect(self._on_pick_basemap_preset)
+        self.actionDrawAOI.toggled.connect(self._on_toggle_draw_aoi)
+        self.actionRun.triggered.connect(self._on_run_clicked)
+        self.actionStop.triggered.connect(lambda: self._message("Proceso detenido por el usuario.", "warning"))
+        self.actionClear.triggered.connect(self._on_clear_clicked)
+        self.actionExportOrtho.triggered.connect(self._on_export_ortho_clicked)
+        self.actionExportReport.triggered.connect(self._on_export_report_clicked)
 
-        # Cargar imagen local a georreferenciar
-        btn_cargar = getattr(self, "btnCargarReferencia", None)
-        if isinstance(btn_cargar, QPushButton):
-            btn_cargar.clicked.connect(self._on_btn_cargar_referencia)
+        # Botones de la página "Fuentes"
+        self.btnBrowseFloating.clicked.connect(self._on_load_floating)
+        self.btnBrowseReference.clicked.connect(self._on_load_reference)
+        self.comboBasemapPresets.activated.connect(self._on_pick_basemap_from_combo)
 
-        connected = 0
+        # Página "Parámetros y cálculo"
+        self.btnRunNow.clicked.connect(self._on_run_clicked)
+        self.btnLoadAOI.clicked.connect(self._on_toggle_draw_aoi_button)
 
-        # 2.1) Conectar posibles QPushButton por objectName
-        btn_names = (
-            "btnCargarReferenciaDesdeMapa",
-            "btnCargarDesdeMapa",
-            "btnBaseMap",
-            "btnSeleccionarBase",
-            "img_from_basemap",
-            "pushButton_cargar_desde_basemap",
-            "pushButton_cargar_referencia_desde_basemap",
-        )
-        for nm in btn_names:
-            w = getattr(self, nm, None)
-            if isinstance(w, QPushButton):
-                try:
-                    # Evita conexiones duplicadas
-                    try:
-                        w.clicked.disconnect()  
-                    except Exception:
-                        pass
-                    w.clicked.connect(self.select_from_basemap)
-                    connected += 1
-                except Exception:
-                    pass
+        # Página "Exportar"
+        self.btnBrowseOutRaster.clicked.connect(self._browse_out_raster)
+        self.btnBrowseOutReportJson.clicked.connect(self._browse_out_json)
+        self.btnBrowseOutReportPdf.clicked.connect(self._browse_out_pdf)
+        self.btnExportAll.clicked.connect(self._on_export_all)
 
-        # 2.2) Conectar QAction por objectName y por texto visible
-        action_names = (
-            "actionCargarDesdeBaseMap",
-            "actionCargarDesdeBasemap",
-            "actionCargarReferenciaDesdeBaseMap",
-            "actionAbrirDesdeBaseMap",
-        )
-        action_texts = {
-            "cargar desde base map",
-            "cargar referencia desde base map",
-            "load from basemap",
-            "load reference from basemap",
-            "desde basemap",
-            "desde base map",
-        }
+        # Stepper con click
+        self.listSteps.itemClicked.connect(self._sync_step_from_list)
 
-        # a) Por objectName directo
-        for nm in action_names:
-            act = getattr(self, nm, None)
-            if isinstance(act, QAction):
-                try:
-                    try:
-                        act.triggered.disconnect()
-                    except Exception:
-                        pass
-                    act.triggered.connect(self.select_from_basemap)
-                    connected += 1
-                except Exception:
-                    pass
-
-        # b) Barrer todas las QAction por texto visible
-        try:
-            for act in self.findChildren(QAction):
-                t = (act.text() or "").replace("&", "").strip().lower()
-                if t in action_texts:
-                    try:
-                        try:
-                            act.triggered.disconnect()
-                        except Exception:
-                            pass
-                        act.triggered.connect(self.select_from_basemap)
-                        connected += 1
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-        self._message(f"‘Desde basemap’ conectado a {connected} control(es).")
-
-    # ------------------- Preview helpers -------------------
-    def _find_preview_frame(self) -> QFrame:
-        candidates = (
-            "frame_imagen_toortorect",  # nombre indicado por ti
-            "frame_image_ortorect",
-            "frame_image",
-            "previewFrame",
-            "frameImage",
-            "framePreview",
-            "preview_container",
-        )
-
-        for nm in candidates:
-            fr = self.findChild(QFrame, nm)
-            if fr is not None:
-                return fr
-        # Fallback: crea un frame si no existe
-        fr = QFrame(self)
-        fr.setFrameShape(QFrame.StyledPanel)
-        fr.setMinimumSize(240, 240)
-        self.setCentralWidget(fr)
-        return fr
-
-    def _init_preview_label(self):
-        self._preview_label = QLabel("Sin imagen")
-        self._preview_label.setAlignment(Qt.AlignCenter)
-        self._preview_label.setMinimumSize(200, 200)
-        lay = self._preview_frame.layout() or QVBoxLayout(self._preview_frame)
-        if self._preview_frame.layout() is None:
-            self._preview_frame.setLayout(lay)
+    # -------------------------------- Helpers UI --------------------------------
+    def _mount_canvas(self, container_widget: QWidget, canvas: QgsMapCanvas):
+        """Inserta un QgsMapCanvas en el contenedor nativo del .ui."""
+        lay = container_widget.layout()
+        if lay is None:
+            lay = QVBoxLayout(container_widget)
+            container_widget.setLayout(lay)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.addWidget(self._preview_label)
+        lay.addWidget(canvas)
+        canvas.setCanvasColor(QColor(255, 255, 255))
+        canvas.enableAntiAliasing(True)
 
-    # ------------------- Acciones principales -------------------
-    def _on_fijar_base_clicked(self):
-        """Salir de la herramienta de selección y limpiar marcas."""
-        try:
-            if self.canvas and self.tool_rectangle:
-                if self.canvas.mapTool() is self.tool_rectangle:
-                    self.canvas.unsetMapTool(self.tool_rectangle)
-            self._message("Selección cerrada.")
-        except Exception as e:
-            self._message("No se pudo salir de la selección: {}".format(e), level="warning")
+    def _sync_step_from_list(self):
+        idx = max(0, self.listSteps.currentRow())
+        self.stackSteps.setCurrentIndex(idx)
 
-    def _on_btn_cargar_referencia(self):
-        """Abrir diálogo de imagen, copiar a temporal sin cargar como capa y previsualizar."""
+    # -------------------------------- Carga de datos --------------------------------
+    def _on_load_floating(self):
         file_filter = self._build_image_filter_string()
         start_dir = os.path.expanduser("~")
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Seleccionar imagen a georreferenciar",
-            start_dir,
-            file_filter
-        )
+        path, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen a georreferenciar", start_dir, file_filter)
         if not path:
             return
-
-        # Copiar a temporal
-        try:
-            tmp_path = self._copy_to_temp(path)
-            self._current_reference_image = tmp_path
-        except Exception as e:
-            QMessageBox.critical(self, "Cargar referencia", "Error creando temporal:\n{}".format(e))
+        # Cargar como raster (no es obligatorio añadir al proyecto)
+        lyr = QgsRasterLayer(path, "Flotante")
+        if not lyr.isValid():
+            QMessageBox.critical(self, "Cargar flotante", "No se pudo cargar la imagen.")
             return
+        self._floating_layer = lyr
+        self.editFloatingPath.setText(path)
+        # Mostrar en canvas flotante
+        self.canvasFloat.setLayers([lyr])
+        self.canvasFloat.setExtent(lyr.extent())
+        self.canvasFloat.refresh()
+        self._message("Imagen flotante cargada.")
 
-        # Mostrar previsualización
-        try:
-            self._show_image_in_frame(tmp_path, self._preview_frame)
-            self._message("Imagen cargada en temporal: {}".format(tmp_path))
-        except Exception as e:
-            QMessageBox.critical(self, "Previsualización", "No se pudo mostrar la imagen:\n{}".format(e))
+    def _on_load_reference(self):
+        # Si radio de 'raster/vector georreferenciado' está activo → abrir archivo raster
+        if self.radioReferenceRaster.isChecked():
+            file_filter = self._build_image_filter_string()
+            start_dir = os.path.expanduser("~")
+            path, _ = QFileDialog.getOpenFileName(self, "Seleccionar referencia georreferenciada", start_dir, file_filter)
+            if not path:
+                return
+            lyr = QgsRasterLayer(path, "Referencia")
+            if not lyr.isValid():
+                QMessageBox.critical(self, "Cargar referencia", "No se pudo cargar la capa de referencia.")
+                return
+            self._reference_layer = lyr
+            self.editReferencePath.setText(path)
+            # Mostrar en canvas referencia
+            self.canvasRef.setLayers([lyr])
+            self.canvasRef.setExtent(lyr.extent())
+            self.canvasRef.refresh()
+            self._message("Referencia cargada.")
+        else:
+            # Basemap (XYZ/WMS) → usa combo o activa herramienta AOI
+            self._on_pick_basemap_preset()
 
-    # ------------------- Flujo 'desde mapa' -------------------
-    def select_from_basemap(self):
-        if not self.canvas or not self.tool_rectangle:
-            self._message("Canvas no disponible.", level="warning")
+    def _on_pick_basemap_preset(self):
+        # Abre el combo si está en la página, o usa selección en combo actual
+        idx = self.comboBasemapPresets.currentIndex()
+        if idx <= 0:
+            QMessageBox.information(self, "Basemap", "Elige un preset en la lista de 'Fuente de referencia'.")
             return
-        self._basemap_layer = self._pick_visible_raster_layer()
-        if not isinstance(self._basemap_layer, QgsRasterLayer) or not self._basemap_layer.isValid():
-            self._message("No hay ráster visible/activo válido para usar como base.", level="warning")
+        self._on_pick_basemap_from_combo(idx)
+
+    def _on_pick_basemap_from_combo(self, idx: int):
+        label = self.comboBasemapPresets.itemText(idx).lower()
+        # Presets XYZ (simples y robustos)
+        presets = {
+            "openstreetmap": "type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "google satellite": "type=xyz&url=https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+            "esri world imagery": "type=xyz&url=https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            # PNOA como XYZ de uso demostrativo (no oficial WMS aquí)
+            "pnoa": "type=xyz&url=https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=GetTile&version=1.0.0&layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&tilematrix={z}&tilerow={y}&tilecol={x}&format=image/jpeg"
+        }
+        key = None
+        for k in presets.keys():
+            if k in label:
+                key = k
+                break
+        if not key:
+            self._message("Preset no reconocido.", "warning")
             return
-        prov = (self._basemap_layer.providerType() or "").lower()
-        self._message(f"Basemap: '{self._basemap_layer.name()}' (provider={prov}). Dibuja un rectángulo…")
-        self.canvas.setMapTool(self.tool_rectangle)
+        uri = presets[key]
+        lyr = QgsRasterLayer(uri, f"Basemap {key.title()}", "wms")  # 'wms' funciona con 'type=xyz' en QGIS
+        if not lyr.isValid():
+            QMessageBox.critical(self, "Basemap", "No se pudo crear la capa XYZ/WMS.")
+            return
+        # Añadimos al proyecto para facilitar AOI en canvas principal
+        QgsProject.instance().addMapLayer(lyr)
+        self._reference_layer = lyr
+        self._basemap_layer = lyr
+        self.editReferencePath.setText(lyr.name())
+        # Mostrar en canvas referencia
+        self.canvasRef.setLayers([lyr])
+        self.canvasRef.setExtent(lyr.extent())
+        self.canvasRef.refresh()
+        self._message(f"Basemap '{lyr.name()}' añadido. Puedes dibujar AOI en el canvas del proyecto.")
 
+    # -------------------------------- AOI y recorte --------------------------------
+    def _on_toggle_draw_aoi(self, checked: bool):
+        if not self.canvas_project or not self.tool_rectangle:
+            self._message("Canvas del proyecto no disponible.", "warning")
+            self.actionDrawAOI.setChecked(False)
+            return
+        if checked:
+            self._basemap_layer = self._pick_visible_raster_layer()
+            if not self._basemap_layer:
+                self._message("Activa un ráster/XYZ visible para usar como base.", "warning")
+                self.actionDrawAOI.setChecked(False)
+                return
+            self.canvas_project.setMapTool(self.tool_rectangle)
+            self._message("Dibuja un rectángulo en el canvas del proyecto…")
+        else:
+            if self.canvas_project.mapTool() is self.tool_rectangle:
+                self.canvas_project.unsetMapTool(self.tool_rectangle)
+            self._message("Selección AOI cancelada.")
 
-    def _pick_visible_raster_layer(self) -> Optional[QgsRasterLayer]:
-        root = QgsProject.instance().layerTreeRoot()
-        # 1) Activa si es ráster y visible
-        al = self.iface.activeLayer() if self.iface else None
-        if isinstance(al, QgsRasterLayer) and al.isValid():
-            node = root.findLayer(al.id())
-            if node and node.isVisible():
-                return al
-
-        # 2) La primera visible según orden
-        for lyr in root.layerOrder():
-            if isinstance(lyr, QgsRasterLayer) and lyr.isValid():
-                node = root.findLayer(lyr.id())
-                if node and node.isVisible():
-                    return lyr
-
-        # 3) Cualquier ráster válido
-        for lyr in QgsProject.instance().mapLayers().values():
-            if isinstance(lyr, QgsRasterLayer) and lyr.isValid():
-                return lyr
-
-        return None
+    def _on_toggle_draw_aoi_button(self):
+        self.actionDrawAOI.setChecked(not self.actionDrawAOI.isChecked())
+        self._on_toggle_draw_aoi(self.actionDrawAOI.isChecked())
 
     def _on_rectangle_selected(self, rect_canvas_crs: QgsRectangle):
         if not self._basemap_layer:
             self._message("No hay capa base seleccionada.", level="warning")
-            self._message("Rectángulo capturado en CRS del canvas.")
-            self._message(f"Basemap provider: {(self._basemap_layer.providerType() or '').lower()}")
             return
 
-        canvas_crs = self.canvas.mapSettings().destinationCrs()
+        canvas_crs = self.canvas_project.mapSettings().destinationCrs()
         layer_crs = self._basemap_layer.crs()
         if canvas_crs != layer_crs:
             xform = QgsCoordinateTransform(canvas_crs, layer_crs, QgsProject.instance())
@@ -316,16 +302,189 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if out_tif:
                 name = "Recorte" if self._is_gdal_backed(self._basemap_layer) else "Recorte (render)"
                 self._add_result_raster(out_tif, name)
-                self._show_image_in_frame(out_tif, self._preview_frame)
+                # Muestra recorte en canvas overlay con opacidad sobre referencia si existe
+                layers: List[QgsRasterLayer] = []
+                if self._reference_layer:
+                    layers.append(self._reference_layer)
+                if isinstance(self._basemap_layer, QgsRasterLayer):
+                    layers.append(QgsRasterLayer(out_tif, "Recorte AOI"))  # temporal
+                self.canvasOver.setLayers(layers)
+                if layers:
+                    self.canvasOver.setExtent(layers[-1].extent())
+                self.canvasOver.refresh()
+                self._message("AOI procesado y mostrado en la pestaña de Superposición.")
         except Exception as e:
             self._message("Error procesando selección: {}".format(e), level="error")
         finally:
-            if self.canvas and self.tool_rectangle and self.canvas.mapTool() is self.tool_rectangle:
-                self.canvas.unsetMapTool(self.tool_rectangle)
+            if self.canvas_project and self.tool_rectangle and self.canvas_project.mapTool() is self.tool_rectangle:
+                self.canvas_project.unsetMapTool(self.tool_rectangle)
+            self.actionDrawAOI.setChecked(False)
 
-    # ------------------- Render y envoltura a GeoTIFF -------------------
+    def _on_overlay_opacity_changed(self, val: int):
+        # Si hay 2 capas en overlay, aplica opacidad a la superior (recorte)
+        layers = self.canvasOver.layers()
+        if len(layers) >= 2:
+            top = layers[-1]
+            self.canvasOver.layerTreeRoot().findLayer(top.id()).setItemOpacity(val / 100.0)
+            self.canvasOver.refresh()
+
+    # -------------------------------- Cálculo (placeholder integrable con tu pipeline) --------------------------------
+    def _on_run_clicked(self):
+        # Aquí integrarías tu pipeline de emparejamiento, RANSAC, warp, etc.
+        # Lee parámetros desde UI:
+        detector = self.comboDetector.currentText()
+        model = self.comboModel.currentText()
+        min_inliers = self.spinMinInliers.value()
+        resampling = self.comboResampling.currentText()
+        clip_to_aoi = self.chkClipToAOI.isChecked()
+
+        # TODO: llamada a tu optimizador y generación de métricas reales
+        # Por ahora actualizamos métricas de ejemplo:
+        self._update_quick_stats(crs=(self._reference_layer.crs().authid() if self._reference_layer else "-"),
+                                 transform=model, gcp=max(12, min_inliers), rmse="1.42 px / 0.73 m")
+        self._update_results_metrics(rmse_x="0.51 m", rmse_y="0.53 m", rmse_tot="0.73 m",
+                                     matches=max(120, min_inliers*10), runtime="3.2 s")
+        self._append_report_text({
+            "detector": detector, "model": model, "min_inliers": min_inliers,
+            "resampling": resampling, "clip_to_aoi": clip_to_aoi,
+            "rmse_total": "0.73 m"
+        })
+        self._message("Cálculo completado (demostración). Integra aquí tu rutina real.")
+
+    # -------------------------------- Exportación --------------------------------
+    def _browse_out_raster(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Guardar ortorrectificada", os.path.expanduser("~"), "GeoTIFF (*.tif *.tiff)")
+        if path:
+            if not path.lower().endswith((".tif", ".tiff")):
+                path += ".tif"
+            self.editOutRaster.setText(path)
+
+    def _browse_out_json(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Guardar reporte JSON", os.path.expanduser("~"), "JSON (*.json)")
+        if path:
+            if not path.lower().endswith(".json"):
+                path += ".json"
+            self.editOutReportJson.setText(path)
+
+    def _browse_out_pdf(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Guardar reporte PDF", os.path.expanduser("~"), "PDF (*.pdf)")
+        if path:
+            if not path.lower().endswith(".pdf"):
+                path += ".pdf"
+            self.editOutReportPdf.setText(path)
+
+    def _on_export_ortho_clicked(self):
+        out_path = self.editOutRaster.text().strip()
+        if not out_path:
+            self._browse_out_raster()
+            out_path = self.editOutRaster.text().strip()
+        if not out_path:
+            return
+        # Aquí harías gdal.Warp / gdal.Translate final según tus parámetros y AOI.
+        # Demo simple: si existe último recorte temporal, lo copiamos:
+        try:
+            if self._last_clip_layer_id:
+                lyr = QgsProject.instance().mapLayer(self._last_clip_layer_id)
+                if isinstance(lyr, QgsRasterLayer) and os.path.exists(lyr.source()):
+                    shutil.copyfile(lyr.source(), out_path)
+                    self._message(f"Orto guardada en: {out_path}")
+                    if self.chkAddToProject.isChecked():
+                        QgsProject.instance().addMapLayer(QgsRasterLayer(out_path, os.path.basename(out_path)))
+        except Exception as e:
+            self._message(f"No se pudo exportar: {e}", "error")
+
+    def _on_export_report_clicked(self):
+        # Escribe JSON/PDF mínimos de ejemplo
+        json_path = self.editOutReportJson.text().strip()
+        pdf_path = self.editOutReportPdf.text().strip()
+        if not json_path:
+            self._browse_out_json(); json_path = self.editOutReportJson.text().strip()
+        if not pdf_path:
+            self._browse_out_pdf(); pdf_path = self.editOutReportPdf.text().strip()
+        if not json_path or not pdf_path:
+            return
+        try:
+            import json
+            data = {
+                "summary": "Reporte de georreferenciación (demo)",
+                "rmse": self.label_rmse_tot.text(),
+                "matches": self.label_num_matches.text(),
+            }
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            # PDF “falso” como TXT con extensión .pdf para demostración (sustituye por ReportLab/WeasyPrint)
+            with open(pdf_path, "w", encoding="utf-8") as f:
+                f.write("Reporte de georreferenciación (demo)\n")
+                f.write(f"RMSE total: {self.label_rmse_tot.text()}\n")
+                f.write(f"Emparejamientos: {self.label_num_matches.text()}\n")
+            self._message(f"Reportes guardados:\nJSON: {json_path}\nPDF: {pdf_path}")
+        except Exception as e:
+            self._message(f"No se pudo exportar reporte: {e}", "error")
+
+    def _on_export_all(self):
+        self._on_export_ortho_clicked()
+        self._on_export_report_clicked()
+
+    def _on_clear_clicked(self):
+        try:
+            if self._last_clip_layer_id:
+                QgsProject.instance().removeMapLayer(self._last_clip_layer_id)
+                self._last_clip_layer_id = None
+            self.plainReport.clear()
+            self._update_results_metrics("-", "-", "-", 0, "-")
+            self._message("Limpieza realizada.")
+        except Exception as e:
+            self._message(f"No se pudo limpiar: {e}", "warning")
+
+    # -------------------------------- Lógica de recorte/render (tuya, adaptada) --------------------------------
+    def _pick_visible_raster_layer(self) -> Optional[QgsRasterLayer]:
+        root = QgsProject.instance().layerTreeRoot()
+        al = self.iface.activeLayer() if self.iface else None
+        if isinstance(al, QgsRasterLayer) and al.isValid():
+            node = root.findLayer(al.id())
+            if node and node.isVisible():
+                return al
+        for lyr in root.layerOrder():
+            if isinstance(lyr, QgsRasterLayer) and lyr.isValid():
+                node = root.findLayer(lyr.id())
+                if node and node.isVisible():
+                    return lyr
+        for lyr in QgsProject.instance().mapLayers().values():
+            if isinstance(lyr, QgsRasterLayer) and lyr.isValid():
+                return lyr
+        return None
+
+    def _on_rectangle_selected(self, rect_canvas_crs: QgsRectangle):
+        if not self._basemap_layer:
+            self._message("No hay capa base seleccionada.", level="warning")
+            return
+
+        canvas_crs = self.canvas_project.mapSettings().destinationCrs()
+        layer_crs = self._basemap_layer.crs()
+        if canvas_crs != layer_crs:
+            xform = QgsCoordinateTransform(canvas_crs, layer_crs, QgsProject.instance())
+            rect_layer_crs = xform.transformBoundingBox(rect_canvas_crs)
+        else:
+            rect_layer_crs = rect_canvas_crs
+
+        try:
+            if self._is_gdal_backed(self._basemap_layer):
+                out_tif = self._clip_with_gdal(self._basemap_layer, rect_layer_crs)
+            else:
+                out_tif = self._render_and_wrap_to_geotiff(self._basemap_layer, rect_layer_crs)
+
+            if out_tif:
+                name = "Recorte" if self._is_gdal_backed(self._basemap_layer) else "Recorte (render)"
+                self._add_result_raster(out_tif, name)
+                self._message("AOI procesado. Revisa la pestaña 'Superposición'.")
+        except Exception as e:
+            self._message("Error procesando selección: {}".format(e), level="error")
+        finally:
+            if self.canvas_project and self.tool_rectangle and self.canvas_project.mapTool() is self.tool_rectangle:
+                self.canvas_project.unsetMapTool(self.tool_rectangle)
+            self.actionDrawAOI.setChecked(False)
+
     def _render_and_wrap_to_geotiff(self, layer: QgsRasterLayer, extent_rect: QgsRectangle) -> Optional[str]:
-        """Renderiza la capa (WMS/XYZ/etc.) a imagen y la envuelve a GeoTIFF con compatibilidad amplia."""
         if not layer or not layer.isValid():
             self._message("Capa base no válida.", level="warning")
             return None
@@ -378,7 +537,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         png_path = self._temp_path(".png")
         img.save(png_path)
-
         tif_path = self._wrap_png_to_geotiff(png_path, extent_rect, layer.crs())
         if not tif_path:
             return None
@@ -422,7 +580,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ds_png = None
         return tif_path
 
-    # ------------------- Clip con GDAL (raster local) -------------------
     def _clip_with_gdal(self, layer: QgsRasterLayer, rect: QgsRectangle) -> Optional[str]:
         try:
             from osgeo import gdal
@@ -447,7 +604,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._message("Recorte GDAL generado: {}".format(out_tif))
         return out_tif
 
-    # ------------------- Utilidades varias -------------------
+    # -------------------------------- Utilidades --------------------------------
     def _is_gdal_backed(self, layer: QgsRasterLayer) -> bool:
         prov = layer.providerType().lower() if layer.providerType() else ""
         src = layer.source() or ""
@@ -472,25 +629,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         d = tempfile.mkdtemp(prefix="autogeo_ref_")
         return os.path.join(d, "tmp{}".format(suffix))
 
-    def _show_image_in_frame(self, img_path: str, frame: QFrame):
-        reader = QImageReader(img_path)
-        reader.setAutoTransform(True)
-        qimg = reader.read()
-        if qimg.isNull():
-            raise RuntimeError("No se pudo leer la imagen: {}".format(reader.errorString()))
-        self._base_pixmap = QtGui.QPixmap.fromImage(qimg)
-        self._rescale_preview(frame)
-
-    def _rescale_preview(self, frame: QFrame):
-        if not self._base_pixmap or self._base_pixmap.isNull():
-            return
-        size = frame.size()
-        if size.width() < 4 or size.height() < 4:
-            return
-        pix = self._base_pixmap.scaled(size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self._preview_label.setPixmap(pix)
-
-    # ------------------- Añadir/retirar capas resultado -------------------
     def _add_result_raster(self, path: str, name: str):
         try:
             prev = getattr(self, "_last_clip_layer_id", None)
@@ -506,7 +644,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self._message("No se pudo cargar el resultado: {}".format(path), level="warning")
 
-    # ------------------- Mensajería y eventos -------------------
+    # ---- UI: quick stats y métricas ----
+    def _update_quick_stats(self, crs: str, transform: str, gcp: int, rmse: str):
+        self.label_crs_value.setText(str(crs))
+        self.label_transform_value.setText(str(transform))
+        self.label_gcp_value.setText(str(gcp))
+        self.label_rmse_value.setText(str(rmse))
+
+    def _update_results_metrics(self, rmse_x: str, rmse_y: str, rmse_tot: str, matches: int, runtime: str):
+        self.label_rmse_x.setText(rmse_x)
+        self.label_rmse_y.setText(rmse_y)
+        self.label_rmse_tot.setText(rmse_tot)
+        self.label_num_matches.setText(str(matches))
+        self.label_runtime.setText(runtime)
+
+    def _append_report_text(self, data: dict):
+        import json
+        txt = json.dumps(data, ensure_ascii=False, indent=2)
+        self.plainReport.appendPlainText(txt)
+
+    # ---- Mensajería y eventos ----
     def _message(self, text: str, level: str = "info"):
         if self.iface:
             bar = self.iface.messageBar()
@@ -518,13 +675,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 bar.pushInfo("Autogeoreferencer", text)
 
     def eventFilter(self, obj, ev):
-        if ev.type() == QtCore.QEvent.Resize and obj is self:
-            self._rescale_preview(self._preview_frame)
         return super().eventFilter(obj, ev)
 
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
-        self._rescale_preview(self._preview_frame)
-
 
 # ============================ Fin de autogeoreferencer_dialog.py ============================
