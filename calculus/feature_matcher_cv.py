@@ -317,11 +317,12 @@ def match_details(img_path1: str,
     img1 = _read_gray(img_path1)
     img2 = _read_gray(img_path2)
 
-    # Calcula score + máscara con el pipeline normal
+    # Calcula score + máscara
     res = match_and_score(
         img1, img2,
         detector_name=detector,
-        params={k: v for k, v in detector_params.items() if k.startswith(("orb_","sift_","akaze_"))},
+        params={k: v for k, v in detector_params.items()
+                if k.startswith(("orb_", "sift_", "akaze_"))},
         matcher_type=matcher_type,
         ratio_thresh=ratio_thresh,
         ransac_thresh=ransac_thresh,
@@ -330,7 +331,7 @@ def match_details(img_path1: str,
 
     # Recompute KPs + good para extraer puntos inlier
     det_params = {k: v for k, v in detector_params.items()
-                  if k.startswith(("orb_","sift_","akaze_"))}
+                  if k.startswith(("orb_", "sift_", "akaze_"))}
     detector_obj = _create_detector(detector, **det_params)
     kp1, d1 = detect_and_describe(img1, detector_obj)
     kp2, d2 = detect_and_describe(img2, detector_obj)
@@ -342,8 +343,9 @@ def match_details(img_path1: str,
     mask = res.mask_inliers
 
     if mask is not None and len(good) > 0:
-        # ⚠️ Protección: puede que la máscara y la lista good no tengan la misma longitud.
-        # Usamos solo hasta el mínimo para evitar "index out of bounds".
+        # Asegurarnos de que la máscara es 1D
+        if hasattr(mask, "ravel"):
+            mask = mask.ravel()
         n = min(len(good), len(mask))
         for i in range(n):
             if mask[i]:
@@ -412,11 +414,21 @@ def draw_matches(img_path1: str,
                  max_draw: int = 60,
                  annotate: bool = True) -> np.ndarray:
     """
-    Devuelve imagen con líneas de correspondencia (inliers resaltados si hay máscara).
-    Anota RMSE, #inliers, #good, detector, etc.
+    Devuelve una imagen tipo "template vs escena" con líneas de correspondencia,
+    como en los ejemplos clásicos de OpenCV:
+
+        [ imagen_flotante | imagen_referencia ]
+                \   \   \    (líneas azules)
+
+    Si hay máscara de inliers, sólo esos matches se usan/colorean.
     """
-    img1 = _read_gray(img_path1)
-    img2 = _read_gray(img_path2)
+    # Para detectar usamos escala de grises
+    img1_gray = _read_gray(img_path1)
+    img2_gray = _read_gray(img_path2)
+
+    # Para dibujar convertimos a BGR (para poder colorear líneas)
+    img1_color = cv2.cvtColor(img1_gray, cv2.COLOR_GRAY2BGR)
+    img2_color = cv2.cvtColor(img2_gray, cv2.COLOR_GRAY2BGR)
 
     detector = params.get("detector", "ORB")
     matcher_type = params.get("matcher_type", "auto")
@@ -425,11 +437,11 @@ def draw_matches(img_path1: str,
     alpha_rmse = params.get("alpha_rmse", 0.1)
 
     det_params = {k: v for k, v in params.items()
-                  if k.startswith(("orb_","sift_","akaze_"))}
+                  if k.startswith(("orb_", "sift_", "akaze_"))}
 
-    # Obtener máscara de inliers y métricas
+    # Obtener máscara de inliers y métricas (no reutilizamos kp/matches de aquí)
     res = match_and_score(
-        img1, img2,
+        img1_gray, img2_gray,
         detector_name=detector, params=det_params,
         matcher_type=matcher_type, ratio_thresh=ratio_thresh,
         ransac_thresh=ransac_thresh, alpha_rmse=alpha_rmse
@@ -437,19 +449,34 @@ def draw_matches(img_path1: str,
 
     # Recalcular KPs y matches para dibujar
     detector_obj = _create_detector(detector, **det_params)
-    kp1, d1 = detect_and_describe(img1, detector_obj)
-    kp2, d2 = detect_and_describe(img2, detector_obj)
+    kp1, d1 = detect_and_describe(img1_gray, detector_obj)
+    kp2, d2 = detect_and_describe(img2_gray, detector_obj)
     desc_dtype = None if d1 is None else d1.dtype
     matcher = _create_matcher(matcher_type, desc_dtype)
     good = knn_ratio_match(d1, d2, matcher, ratio_thresh=ratio_thresh)
 
+    # Lista de matches a dibujar
     draw_list = good[:max_draw]
-    mask_draw = None
-    if res.mask_inliers is not None:
-        mask_draw = res.mask_inliers[:len(draw_list)].astype(np.uint8).tolist()
 
+    # Construir máscara de inliers del mismo tamaño que draw_list (si existe)
+    mask_draw = None
+    if res.mask_inliers is not None and len(draw_list) > 0:
+        mask = res.mask_inliers
+        # Asegurarnos de que la máscara es 1D
+        if hasattr(mask, "ravel"):
+            mask = mask.ravel()
+        n = min(len(draw_list), len(mask))
+        mask_draw = mask[:n].astype(np.uint8).tolist()
+        draw_list = draw_list[:n]  # misma longitud que mask_draw
+
+    # Imagen de matches: izq = flotante, dcha = referencia
+    # matchColor: azul, singlePointColor: verde
     vis = cv2.drawMatches(
-        img1, kp1, img2, kp2, draw_list, None,
+        img1_color, kp1,
+        img2_color, kp2,
+        draw_list, None,
+        matchColor=(255, 0, 0),
+        singlePointColor=(0, 255, 0),
         matchesMask=mask_draw,
         flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
     )
@@ -458,15 +485,20 @@ def draw_matches(img_path1: str,
         h, w = vis.shape[:2]
         pad = 10
         overlay = vis.copy()
-        cv2.rectangle(overlay, (pad, pad), (min(w-1, 520), pad+110), (0, 0, 0), -1)
+        # cajetín semitransparente con info básica
+        cv2.rectangle(overlay, (pad, pad), (min(w - 1, 520), pad + 110), (0, 0, 0), -1)
         vis = cv2.addWeighted(overlay, 0.35, vis, 0.65, 0)
 
         tx = pad + 8
         ty = pad + 22
 
-        def put(s):
+        def put(s: str):
             nonlocal ty
-            cv2.putText(vis, s, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(
+                vis, s, (tx, ty),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                (255, 255, 255), 2, cv2.LINE_AA
+            )
             ty += 24
 
         put(f"Detector: {detector}  |  Matcher: {matcher_type}")
@@ -475,6 +507,7 @@ def draw_matches(img_path1: str,
         put(f"Ratio: {ratio_thresh}  |  RANSAC: {ransac_thresh}")
 
     return vis
+
 
 
 # --------------------------- Optimizador con early-exit ---------------------------
