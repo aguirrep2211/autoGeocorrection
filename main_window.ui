@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
@@ -14,178 +13,25 @@
   <property name="windowTitle">
    <string>Autogeoreferencer</string>
   </property>
-
-  <!-- ===== Menubar & Statusbar ===== -->
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1220</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <addaction name="menuArchivo"/>
-   <addaction name="menuVer"/>
-   <addaction name="menuAyuda"/>
-  </widget>
-  <widget class="QStatusBar" name="statusbar">
-   <property name="sizeGripEnabled">
-    <bool>true</bool>
-   </property>
-  </widget>
-
-  <!-- ===== Toolbars ===== -->
-  <widget class="QToolBar" name="mainToolBar">
-   <property name="windowTitle">
-    <string>Barra principal</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionLoadFloating"/>
-   <addaction name="actionLoadReference"/>
-   <addaction name="actionPickBasemap"/>
-   <addaction name="separator"/>
-   <addaction name="actionDrawAOI"/>
-   <addaction name="separator"/>
-   <addaction name="actionRun"/>
-   <addaction name="actionStop"/>
-   <addaction name="actionClear"/>
-   <addaction name="separator"/>
-   <addaction name="actionExportOrtho"/>
-   <addaction name="actionExportReport"/>
-  </widget>
-
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_root" stretch="0,1">
+   <layout class="QVBoxLayout" name="verticalLayout_main">
     <item>
-     <!-- ===== Top header with stepper and quick stats ===== -->
-     <widget class="QFrame" name="frameHeader">
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_header">
-       <item>
-        <widget class="QListWidget" name="listSteps">
-         <property name="maximumWidth">
-          <number>320</number>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>true</bool>
-         </property>
-         <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
-         </property>
-         <item>
-          <property name="text">
-           <string>1 · Fuentes: cargar imágenes/base map</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2 · Parámetros y cálculo</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3 · Resultados y control de calidad</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>4 · Exportar ortorrectificada y reportes</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <widget class="QFrame" name="frameQuickStats">
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_stats">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_crs_title">
-            <property name="text">
-             <string>CRS:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_crs_value">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_transform_title">
-            <property name="text">
-             <string>Transformación:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="label_transform_value">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_gcp_title">
-            <property name="text">
-             <string>Emparejamientos (GCPs):</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="label_gcp_value">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_rmse_title">
-            <property name="text">
-             <string>RMSE total (px / m):</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLabel" name="label_rmse_value">
-            <property name="text">
-             <string>-</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-
-    <item>
-     <!-- ===== Main Splitter: left controls / right view ===== -->
      <widget class="QSplitter" name="splitterMain">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-
       <!-- Left: Stacked step panels -->
-      <widget class="QStackedWidget" name="stackSteps" minimumSize="300, 400">
+      <widget class="QStackedWidget" name="stackSteps">
+       <property name="minimumSize">
+        <size>
+         <width>300</width>
+         <height>400</height>
+        </size>
+       </property>
        <!-- Page 0: Fuentes -->
        <widget class="QWidget" name="pageSources">
         <layout class="QVBoxLayout" name="verticalLayout_sources">
+         <!-- Imagen flotante -->
          <item>
           <widget class="QGroupBox" name="groupFloating">
            <property name="title">
@@ -202,80 +48,96 @@
             <item row="0" column="1">
              <widget class="QPushButton" name="btnBrowseFloating">
               <property name="text">
-               <string>Examinar…</string>
+               <string>Examinar...</string>
               </property>
              </widget>
             </item>
             <item row="1" column="0" colspan="2">
-             <widget class="QCheckBox" name="chkFloatingPyramid">
+             <widget class="QLabel" name="labelFloatingInfo">
               <property name="text">
-               <string>Construir pirámides (si no existen)</string>
+               <string>No hay imagen cargada</string>
               </property>
              </widget>
             </item>
            </layout>
           </widget>
          </item>
-
+         <!-- Capa de referencia -->
          <item>
           <widget class="QGroupBox" name="groupReference">
            <property name="title">
-            <string>Fuente de referencia</string>
+            <string>Capa de referencia (georreferenciada)</string>
            </property>
            <layout class="QGridLayout" name="grid_reference">
             <item row="0" column="0">
-             <widget class="QRadioButton" name="radioReferenceRaster">
-              <property name="text">
-               <string>Raster/vector georreferenciado</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QRadioButton" name="radioReferenceBasemap">
-              <property name="text">
-               <string>Capa base (XYZ / WMS / WMTS)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
              <widget class="QLineEdit" name="editReferencePath">
               <property name="placeholderText">
-               <string>Ruta capa de referencia o nombre de capa</string>
+               <string>Ruta de la capa (raster/vector)</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
+            <item row="0" column="1">
              <widget class="QPushButton" name="btnBrowseReference">
               <property name="text">
-               <string>Seleccionar…</string>
+               <string>Examinar...</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="0" colspan="2">
-             <widget class="QComboBox" name="comboBasemapPresets">
-              <property name="editable">
-               <bool>false</bool>
+            <item row="1" column="0" colspan="2">
+             <widget class="QPushButton" name="btnLoadReferenceFromCanvas">
+              <property name="text">
+               <string>Cargar referencia desde el mapa de QGIS</string>
               </property>
-              <item><property name="text"><string>— Elegir preset XYZ/WMS —</string></property></item>
-              <item><property name="text"><string>OpenStreetMap (XYZ)</string></property></item>
-              <item><property name="text"><string>Google Satellite (XYZ)</string></property></item>
-              <item><property name="text"><string>ESRI World Imagery (XYZ)</string></property></item>
-              <item><property name="text"><string>PNOA (WMS)</string></property></item>
+             </widget>
+            </item>
+            <item row="2" column="0" colspan="2">
+             <widget class="QLabel" name="labelReferenceInfo">
+              <property name="text">
+               <string>No hay referencia cargada</string>
+              </property>
              </widget>
             </item>
            </layout>
           </widget>
          </item>
-
+         <!-- NUEVO: MDE -->
+         <item>
+          <widget class="QGroupBox" name="groupDEM">
+           <property name="title">
+            <string>Modelo Digital de Elevaciones (MDE)</string>
+           </property>
+           <layout class="QGridLayout" name="grid_dem">
+            <item row="0" column="0">
+             <widget class="QLineEdit" name="editDEMPath">
+              <property name="placeholderText">
+               <string>Ruta del MDE (tif, asc, etc.)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="btnBrowseDEM">
+              <property name="text">
+               <string>Examinar...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QLabel" name="labelDEMInfo">
+              <property name="text">
+               <string>No hay MDE cargado</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <!-- Spacer -->
          <item>
           <spacer name="verticalSpacer_sources">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <property name="sizeHint" stdset="0">
+           <property name="sizeHint">
             <size>
              <width>20</width>
              <height>40</height>
@@ -285,260 +147,642 @@
          </item>
         </layout>
        </widget>
-
-       <!-- Page 1: Parámetros y cálculo -->
-       <widget class="QWidget" name="pageParams">
-        <layout class="QVBoxLayout" name="verticalLayout_params">
+       <!-- Page 1: AOI -->
+       <widget class="QWidget" name="pageAOI">
+        <layout class="QVBoxLayout" name="verticalLayout_aoi">
          <item>
-          <widget class="QGroupBox" name="groupMatching">
+          <widget class="QGroupBox" name="groupAOI">
            <property name="title">
-            <string>Emparejamiento y transformación</string>
+            <string>Área de Interés (AOI)</string>
+           </property>
+           <layout class="QVBoxLayout" name="vbox_aoi">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="labelAOIInfo">
+              <property name="text">
+               <string>Defina un rectángulo de interés sobre la referencia.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="hbox_aoi_buttons">
+              <item>
+               <widget class="QPushButton" name="btnDrawAOI">
+                <property name="text">
+                 <string>Dibujar AOI</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnClearAOI">
+                <property name="text">
+                 <string>Limpiar AOI</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_aoi">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelAOIStatus">
+              <property name="text">
+               <string>AOI no definida</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_aoi">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <!-- Page 2: Matching -->
+       <widget class="QWidget" name="pageMatching">
+        <layout class="QVBoxLayout" name="verticalLayout_matching">
+         <item>
+          <widget class="QGroupBox" name="groupMatchingParams">
+           <property name="title">
+            <string>Parámetros de emparejamiento</string>
            </property>
            <layout class="QGridLayout" name="grid_matching">
             <item row="0" column="0">
              <widget class="QLabel" name="label_detector">
-              <property name="text"><string>Detector/descriptor</string></property>
+              <property name="text">
+               <string>Detector de características:</string>
+              </property>
              </widget>
             </item>
             <item row="0" column="1">
              <widget class="QComboBox" name="comboDetector">
-              <item><property name="text"><string>SIFT</string></property></item>
-              <item><property name="text"><string>ORB</string></property></item>
-              <item><property name="text"><string>AKAZE</string></property></item>
-              <item><property name="text"><string>SuperPoint</string></property></item>
+              <item>
+               <property name="text">
+                <string>ORB</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>SIFT</string>
+               </property>
+              </item>
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="label_model">
-              <property name="text"><string>Modelo transformación</string></property>
+             <widget class="QLabel" name="label_maxFeatures">
+              <property name="text">
+               <string>Número máximo de puntos:</string>
+              </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QComboBox" name="comboModel">
-              <item><property name="text"><string>Helmert (cuadrática 1º)</string></property></item>
-              <item><property name="text"><string>Affine</string></property></item>
-              <item><property name="text"><string>Polynomial 2º</string></property></item>
-              <item><property name="text"><string>Thin Plate Spline</string></property></item>
-              <item><property name="text"><string>Projective (homografía)</string></property></item>
+             <widget class="QSpinBox" name="spinMaxFeatures">
+              <property name="maximum">
+               <number>100000</number>
+              </property>
+              <property name="value">
+               <number>5000</number>
+              </property>
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="label_ransac">
-              <property name="text"><string>RANSAC inliers min</string></property>
+             <widget class="QLabel" name="label_matcher">
+              <property name="text">
+               <string>Algoritmo de emparejamiento:</string>
+              </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QSpinBox" name="spinMinInliers">
-              <property name="minimum"><number>4</number></property>
-              <property name="maximum"><number>9999</number></property>
-              <property name="value"><number>12</number></property>
+             <widget class="QComboBox" name="comboMatcher">
+              <item>
+               <property name="text">
+                <string>FLANN</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>BFMatcher</string>
+               </property>
+              </item>
              </widget>
             </item>
             <item row="3" column="0">
-             <widget class="QLabel" name="label_resampling">
-              <property name="text"><string>Re-muestreo</string></property>
+             <widget class="QLabel" name="label_ratio">
+              <property name="text">
+               <string>Ratio test (Lowe):</string>
+              </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QComboBox" name="comboResampling">
-              <item><property name="text"><string>Nearest</string></property></item>
-              <item><property name="text"><string>Bilinear</string></property></item>
-              <item><property name="text"><string>Cubic</string></property></item>
-              <item><property name="text"><string>Lanczos</string></property></item>
+             <widget class="QDoubleSpinBox" name="spinRatio">
+              <property name="decimals">
+               <number>2</number>
+              </property>
+              <property name="singleStep">
+               <double>0.05</double>
+              </property>
+              <property name="value">
+               <double>0.75</double>
+              </property>
              </widget>
             </item>
             <item row="4" column="0">
-             <widget class="QCheckBox" name="chkClipToAOI">
-              <property name="text"><string>Recortar a AOI</string></property>
-              <property name="checked"><bool>true</bool></property>
+             <widget class="QLabel" name="label_minMatches">
+              <property name="text">
+               <string>Mínimo de matches válidos:</string>
+              </property>
              </widget>
             </item>
             <item row="4" column="1">
-             <widget class="QPushButton" name="btnRunNow">
-              <property name="text"><string>Ejecutar ahora</string></property>
+             <widget class="QSpinBox" name="spinMinMatches">
+              <property name="maximum">
+               <number>10000</number>
+              </property>
+              <property name="value">
+               <number>20</number>
+              </property>
              </widget>
             </item>
            </layout>
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupAOI">
-           <property name="title"><string>Área de interés (AOI)</string></property>
-           <layout class="QHBoxLayout" name="hbox_aoi">
-            <item><widget class="QLabel" name="label_aoi_info"><property name="text"><string>Usa el botón de la barra para dibujar un rectángulo o carga una geometría.</string></property></widget></item>
-            <item><widget class="QPushButton" name="btnLoadAOI"><property name="text"><string>Cargar AOI…</string></property></widget></item>
-           </layout>
-          </widget>
+          <spacer name="verticalSpacer_matching">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
-
-       <!-- Page 2: Resultados -->
-       <widget class="QWidget" name="pageResults">
-        <layout class="QVBoxLayout" name="verticalLayout_results">
+       <!-- Page 3: Salida -->
+       <widget class="QWidget" name="pageOutput">
+        <layout class="QVBoxLayout" name="verticalLayout_output">
          <item>
-          <widget class="QGroupBox" name="groupMetrics">
-           <property name="title"><string>Métricas</string></property>
-           <layout class="QGridLayout" name="grid_metrics">
-            <item row="0" column="0"><widget class="QLabel" name="label_rmse_x_t"><property name="text"><string>RMSE X</string></property></widget></item>
-            <item row="0" column="1"><widget class="QLabel" name="label_rmse_x"><property name="text"><string>-</string></property></widget></item>
-            <item row="1" column="0"><widget class="QLabel" name="label_rmse_y_t"><property name="text"><string>RMSE Y</string></property></widget></item>
-            <item row="1" column="1"><widget class="QLabel" name="label_rmse_y"><property name="text"><string>-</string></property></widget></item>
-            <item row="2" column="0"><widget class="QLabel" name="label_rmse_tot_t"><property name="text"><string>RMSE Total</string></property></widget></item>
-            <item row="2" column="1"><widget class="QLabel" name="label_rmse_tot"><property name="text"><string>-</string></property></widget></item>
-            <item row="3" column="0"><widget class="QLabel" name="label_num_matches_t"><property name="text"><string>Emparejamientos válidos</string></property></widget></item>
-            <item row="3" column="1"><widget class="QLabel" name="label_num_matches"><property name="text"><string>0</string></property></widget></item>
-            <item row="4" column="0"><widget class="QLabel" name="label_runtime_t"><property name="text"><string>Tiempo de ejecución</string></property></widget></item>
-            <item row="4" column="1"><widget class="QLabel" name="label_runtime"><property name="text"><string>-</string></property></widget></item>
+          <widget class="QGroupBox" name="groupOutput">
+           <property name="title">
+            <string>Salida y opciones de exportación</string>
+           </property>
+           <layout class="QGridLayout" name="grid_output">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_outputPath">
+              <property name="text">
+               <string>Carpeta de salida:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="editOutputFolder">
+              <property name="placeholderText">
+               <string>Directorio para el ortomosaico georreferenciado</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="btnBrowseOutputFolder">
+              <property name="text">
+               <string>Examinar...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_outputCrs">
+              <property name="text">
+               <string>CRS de salida:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QComboBox" name="comboOutputCrs"/>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_outputFormat">
+              <property name="text">
+               <string>Formato:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="comboOutputFormat">
+              <item>
+               <property name="text">
+                <string>GeoTIFF</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>PNG</string>
+               </property>
+              </item>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupReportPreview">
-           <property name="title"><string>Vista previa del reporte</string></property>
-           <layout class="QVBoxLayout" name="vbox_report">
-            <item><widget class="QPlainTextEdit" name="plainReport"><property name="readOnly"><bool>true</bool></property></widget></item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-
-       <!-- Page 3: Exportar -->
-       <widget class="QWidget" name="pageExport">
-        <layout class="QGridLayout" name="grid_export">
-         <item row="0" column="0">
-          <widget class="QGroupBox" name="groupExportRaster">
-           <property name="title"><string>Exportar ortorrectificada</string></property>
-           <layout class="QGridLayout" name="grid_export_raster">
-            <item row="0" column="0"><widget class="QLabel" name="label_out_raster"><property name="text"><string>Salida GeoTIFF</string></property></widget></item>
-            <item row="0" column="1"><widget class="QLineEdit" name="editOutRaster"/></item>
-            <item row="0" column="2"><widget class="QPushButton" name="btnBrowseOutRaster"><property name="text"><string>Examinar…</string></property></widget></item>
-            <item row="1" column="0"><widget class="QLabel" name="label_compression"><property name="text"><string>Compresión</string></property></widget></item>
-            <item row="1" column="1"><widget class="QComboBox" name="comboCompression">
-              <item><property name="text"><string>DEFLATE</string></property></item>
-              <item><property name="text"><string>LZW</string></property></item>
-              <item><property name="text"><string>ZSTD</string></property></item>
-              <item><property name="text"><string>NONE</string></property></item>
-            </widget></item>
-            <item row="2" column="0"><widget class="QCheckBox" name="chkAddToProject"><property name="text"><string>Añadir al proyecto</string></property><property name="checked"><bool>true</bool></property></widget></item>
-           </layout>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QGroupBox" name="groupExportReport">
-           <property name="title"><string>Exportar reporte de calidad</string></property>
-           <layout class="QGridLayout" name="grid_export_report">
-            <item row="0" column="0"><widget class="QLabel" name="label_out_report"><property name="text"><string>Salida JSON</string></property></widget></item>
-            <item row="0" column="1"><widget class="QLineEdit" name="editOutReportJson"/></item>
-            <item row="0" column="2"><widget class="QPushButton" name="btnBrowseOutReportJson"><property name="text"><string>Examinar…</string></property></widget></item>
-            <item row="1" column="0"><widget class="QLabel" name="label_out_pdf"><property name="text"><string>Salida PDF</string></property></widget></item>
-            <item row="1" column="1"><widget class="QLineEdit" name="editOutReportPdf"/></item>
-            <item row="1" column="2"><widget class="QPushButton" name="btnBrowseOutReportPdf"><property name="text"><string>Examinar…</string></property></widget></item>
-            <item row="2" column="0" colspan="3"><widget class="QPushButton" name="btnExportAll"><property name="text"><string>Exportar todo</string></property></widget></item>
-           </layout>
-          </widget>
+          <spacer name="verticalSpacer_output">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
       </widget>
-
-      <!-- Right: Map and previews -->
+      <!-- Right: Tab views -->
       <widget class="QTabWidget" name="tabViews">
-       <property name="currentIndex"><number>0</number></property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <!-- Tab 0: lado a lado -->
        <widget class="QWidget" name="tabSideBySide">
-        <attribute name="title"><string>Vista lado a lado</string></attribute>
+        <attribute name="title">
+         <string>Vista lado a lado</string>
+        </attribute>
         <layout class="QHBoxLayout" name="hbox_side_by_side">
          <item>
           <widget class="QGroupBox" name="groupFloatPreview">
-           <property name="title"><string>Flotante</string></property>
-           <layout class="QVBoxLayout" name="vbox_float_prev">
-            <item><widget class="QWidget" name="canvasFloating" native="true">
-              <property name="minimumSize"><size><width>100</width><height>200</height></size></property>
-             </widget></item>
+           <property name="title">
+            <string>Imagen flotante</string>
+           </property>
+           <layout class="QVBoxLayout" name="vbox_float_preview">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="labelFloatPreview">
+              <property name="minimumSize">
+               <size>
+                <width>256</width>
+                <height>256</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>256</width>
+                <height>256</height>
+               </size>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="text">
+               <string>(Sin imagen)</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
          <item>
           <widget class="QGroupBox" name="groupRefPreview">
-           <property name="title"><string>Referencia</string></property>
-           <layout class="QVBoxLayout" name="vbox_ref_prev">
-            <item><widget class="QWidget" name="canvasReference" native="true">
-              <property name="minimumSize"><size><width>100</width><height>200</height></size></property>
-             </widget></item>
+           <property name="title">
+            <string>Referencia</string>
+           </property>
+           <layout class="QVBoxLayout" name="vbox_ref_preview">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="labelRefPreview">
+              <property name="minimumSize">
+               <size>
+                <width>256</width>
+                <height>256</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>256</width>
+                <height>256</height>
+               </size>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="text">
+               <string>(Sin imagen)</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabOverlay">
-        <attribute name="title"><string>Superposición</string></attribute>
-        <layout class="QVBoxLayout" name="vbox_overlay">
-         <item><widget class="QSlider" name="sliderOpacity">
-           <property name="orientation"><enum>Qt::Horizontal</enum></property>
-           <property name="minimum"><number>0</number></property>
-           <property name="maximum"><number>100</number></property>
-           <property name="value"><number>50</number></property>
-          </widget></item>
-         <item><widget class="QWidget" name="canvasOverlay" native="true">
-           <property name="minimumSize"><size><width>200</width><height>400</height></size></property>
-          </widget></item>
+       <!-- Tab 1: Matches -->
+       <widget class="QWidget" name="tabMatches">
+        <attribute name="title">
+         <string>Matches</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="vbox_matches">
+         <item>
+          <widget class="QLabel" name="labelMatchesInfo">
+           <property name="text">
+            <string>Visualización de puntos emparejados entre la imagen flotante y la referencia.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelMatchesPreview">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="text">
+            <string>(Sin visualización)</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <!-- Tab 2: Residuales -->
+       <widget class="QWidget" name="tabResiduals">
+        <attribute name="title">
+         <string>Residuales</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="vbox_residuals">
+         <item>
+          <widget class="QLabel" name="labelResidualsInfo">
+           <property name="text">
+            <string>Mapa o gráfica de residuales de la transformación.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelResidualsPreview">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="text">
+            <string>(Sin visualización)</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </widget>
      </widget>
     </item>
+    <!-- Bottom status frame -->
+    <item>
+     <widget class="QFrame" name="frameBottom">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_bottom">
+       <item>
+        <layout class="QHBoxLayout" name="hbox_step_controls">
+         <item>
+          <widget class="QPushButton" name="btnPrevStep">
+           <property name="text">
+            <string>&lt; Anterior</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnNextStep">
+           <property name="text">
+            <string>Siguiente &gt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_bottom">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="grid_status">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_status_title">
+           <property name="text">
+            <string>Estado:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_status_value">
+           <property name="text">
+            <string>Listo</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_rmse_title">
+           <property name="text">
+            <string>RMSE:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_rmse_value">
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+         </item>
+         <!-- NUEVO: barra de progreso -->
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_progress_title">
+           <property name="text">
+            <string>Progreso:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QProgressBar" name="progressBar">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="textVisible">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
-
-  <!-- ===== Menus ===== -->
-  <action name="menuArchivo">
-   <property name="text"><string>&amp;Archivo</string></property>
-  </action>
-  <action name="menuVer">
-   <property name="text"><string>&amp;Ver</string></property>
-  </action>
-  <action name="menuAyuda">
-   <property name="text"><string>&amp;Ayuda</string></property>
-  </action>
-
-  <!-- ===== Actions for toolbar ===== -->
+  <!-- Menú -->
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1220</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuArchivo">
+    <property name="title">
+     <string>Archivo</string>
+    </property>
+    <addaction name="actionLoadFloating"/>
+    <addaction name="actionLoadReference"/>
+    <addaction name="actionLoadBasemap"/>
+    <addaction name="separator"/>
+    <addaction name="actionExportOrtho"/>
+    <addaction name="separator"/>
+    <addaction name="actionSalir"/>
+   </widget>
+   <widget class="QMenu" name="menuAyuda">
+    <property name="title">
+     <string>Ayuda</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuArchivo"/>
+   <addaction name="menuAyuda"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <!-- Acciones -->
   <action name="actionLoadFloating">
-   <property name="text"><string>Cargar flotante</string></property>
-   <property name="toolTip"><string>Cargar imagen a georreferenciar</string></property>
+   <property name="text">
+    <string>Cargar imagen flotante...</string>
+   </property>
   </action>
   <action name="actionLoadReference">
-   <property name="text"><string>Cargar referencia</string></property>
-   <property name="toolTip"><string>Cargar raster/capa georreferenciada</string></property>
+   <property name="text">
+    <string>Cargar referencia...</string>
+   </property>
   </action>
-  <action name="actionPickBasemap">
-   <property name="text"><string>Basemap</string></property>
-   <property name="toolTip"><string>Elegir capa base (XYZ/WMS)</string></property>
-  </action>
-  <action name="actionDrawAOI">
-   <property name="text"><string>AOI</string></property>
-   <property name="toolTip"><string>Dibujar rectángulo de AOI</string></property>
-   <property name="checkable"><bool>true</bool></property>
-  </action>
-  <action name="actionRun">
-   <property name="text"><string>Ejecutar</string></property>
-   <property name="toolTip"><string>Ejecutar georreferenciación automática</string></property>
-  </action>
-  <action name="actionStop">
-   <property name="text"><string>Detener</string></property>
-   <property name="toolTip"><string>Detener proceso</string></property>
-  </action>
-  <action name="actionClear">
-   <property name="text"><string>Limpiar</string></property>
-   <property name="toolTip"><string>Limpiar resultados temporales</string></property>
+  <action name="actionLoadBasemap">
+   <property name="text">
+    <string>Cargar referencia desde mapa...</string>
+   </property>
   </action>
   <action name="actionExportOrtho">
-   <property name="text"><string>Exportar orto</string></property>
-   <property name="toolTip"><string>Guardar GeoTIFF ortorrectificado</string></property>
+   <property name="text">
+    <string>Exportar ortomosaico...</string>
+   </property>
   </action>
-  <action name="actionExportReport">
-   <property name="text"><string>Exportar reporte</string></property>
-   <property name="toolTip"><string>Guardar reportes (JSON/PDF)</string></property>
+  <action name="actionSalir">
+   <property name="text">
+    <string>Salir</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>Acerca de Autogeoreferencer...</string>
+   </property>
   </action>
  </widget>
  <resources/>
