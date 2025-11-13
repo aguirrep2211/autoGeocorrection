@@ -107,7 +107,7 @@ class RasterReferenceDialog(QtWidgets.QDialog):
 
         self.btnOpenRasterMgr = QtWidgets.QPushButton("Administrador raster...", self)
         try:
-            # Icono del administrador de fuentes de datos
+            
             icon = QgsApplication.getThemeIcon("mIconDataSourceManager.svg")
             if not icon.isNull():
                 self.btnOpenRasterMgr.setIcon(icon)
@@ -127,12 +127,12 @@ class RasterReferenceDialog(QtWidgets.QDialog):
 
         layout.addLayout(bottom_layout)
 
-        # Señales
+
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         self.btnOpenRasterMgr.clicked.connect(self._on_open_raster_manager)
 
-        # Rellenar lista de capas
+
         self._populate_layers()
 
     def _populate_layers(self):
@@ -167,11 +167,11 @@ class RasterReferenceDialog(QtWidgets.QDialog):
                 "no se ha pasado la interfaz de QGIS (iface).",
             )
             return
-        # QGIS 3.x: openDataSourceManagerPage("raster")
+        
         try:
             self.iface.openDataSourceManagerPage("raster")
         except AttributeError:
-            # Fallback por si cambia el API
+
             try:
                 self.iface.showDataSourceManager()
             except AttributeError:
@@ -182,7 +182,7 @@ class RasterReferenceDialog(QtWidgets.QDialog):
                     "fuentes de datos desde este plugin.",
                 )
 
-        # Opcional: refrescar la lista por si el usuario ha añadido capas nuevas
+        # refrescar por si hay capas nuevas
         self._populate_layers()
 
     def get_selected_layer(self):
@@ -220,10 +220,11 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         self._ref_pixmap = None
         self._ref_layer = None
 
-        self._ref_img_path = None      # ruta de la imagen que se usará como referencia para el motor CV
-        self._ref_crs = None  
+        # Para el motor CV
+        self._ref_img_path = None      # ruta de la imagen usada como referencia
+        self._ref_crs = None           # CRS de referencia
 
-        # Para gestionar la herramienta de rectángulo en el canvas
+        # Para herramienta de rectángulo en el canvas
         self._rect_tool = None
         self._prev_map_tool = None
 
@@ -231,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         try:
             self.splitterMain.setSizes([300, 700])
         except AttributeError:
-            # Por si el nombre del splitter cambiase en el .ui
+
             pass
 
         # =========================
@@ -258,19 +259,20 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         except AttributeError:
             pass
 
+        # Botón GET MATCHES >
+        try:
+            self.btnNextStep.clicked.connect(self.run_matching_from_ui)
+        except AttributeError:
+            pass
+
     # ------------------------------------------------------------------
     # LÓGICA DE LOS BOTONES - IMAGEN FLOTANTE
     # ------------------------------------------------------------------
     def _on_browse_floating_clicked(self):
         """
         Se ejecuta al pulsar el botón "Examinar..." de la imagen flotante.
-
-        Abre un diálogo de archivo estándar del sistema (Linux/Windows/macOS)
-        para seleccionar cualquier imagen. Una vez seleccionada:
-
-         - Rellena el QLineEdit editFloatingPath con la ruta.
-         - Carga la imagen en el QLabel labelFloatPreview.
         """
+
         filtros = (
             "Imágenes (*.tif *.tiff *.jpg *.jpeg *.png *.bmp *.gif);;"
             "Todos los archivos (*)"
@@ -299,6 +301,7 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
 
         try:
             self.editFloatingPath.setText(file_path)
+            self.labelFloatingInfo.setText(os.path.basename(file_path))
         except AttributeError:
             pass
 
@@ -317,47 +320,53 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         self._update_float_preview()
 
     # ------------------------------------------------------------------
-    # LÓGICA DE LOS BOTONES - CAPA DE REFERENCIA (selector de ráster)
+    # LÓGICA DE LOS BOTONES - CAPA DE REFERENCIA
     # ------------------------------------------------------------------
-        def _on_browse_reference_clicked(self):
-    
-            dlg = RasterReferenceDialog(self.iface, self)
-            if dlg.exec_() != QtWidgets.QDialog.Accepted:
-                return
-    
-            layer = dlg.get_selected_layer()
-            if layer is None:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Sin capa seleccionada",
-                    "No se ha seleccionado ninguna capa raster de referencia.",
-                )
-                return
-    
-            self._ref_layer = layer
-            self._ref_crs = layer.crs()  # <-- CRS de referencia
-    
-            crs_text = layer.crs().authid() if layer.crs().isValid() else "CRS desconocido"
-            desc = f"{layer.name()} [{crs_text}]"
-    
-            try:
-                self.editReferencePath.setText(desc)
-            except AttributeError:
-                pass
-    
-            try:
-                self.labelReferenceInfo.setText(f"Capa: {desc}")
-            except AttributeError:
-                pass
-    
-            # Guardar ruta de imagen y pixmap
-            self._load_reference_pixmap_from_layer(layer)
-            self._update_reference_preview()
+    def _on_browse_reference_clicked(self):
+        """
+        Permite seleccionar una capa raster de referencia del proyecto QGIS.
+        """
+        dlg = RasterReferenceDialog(self.iface, self)
+        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+            return
+
+        layer = dlg.get_selected_layer()
+        if layer is None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Sin capa seleccionada",
+                "No se ha seleccionado ninguna capa raster de referencia.",
+            )
+            return
+
+        self._ref_layer = layer
+        self._ref_crs = layer.crs()  # CRS de referencia
+
+        crs_text = layer.crs().authid() if layer.crs().isValid() else "CRS desconocido"
+        desc = f"{layer.name()} [{crs_text}]"
+
+        try:
+            self.editReferencePath.setText(desc)
+        except AttributeError:
+            pass
+
+        try:
+            self.labelReferenceInfo.setText(f"Capa: {desc}")
+        except AttributeError:
+            pass
+
+        # Guardar ruta de imagen y pixmap
+        self._load_reference_pixmap_from_layer(layer)
+        self._update_reference_preview()
 
 
     def _load_reference_pixmap_from_layer(self, layer: QgsRasterLayer):
+        """
+        Intenta cargar un QPixmap a partir de la fuente de la capa raster
+        y guarda la ruta en _ref_img_path para el motor de matching.
+        """
         self._ref_pixmap = None
-        self._ref_img_path = None   # <-- reiniciar
+        self._ref_img_path = None
 
         if not isinstance(layer, QgsRasterLayer) or not layer.isValid():
             return
@@ -384,16 +393,14 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
             return
 
         self._ref_pixmap = pixmap
-        self._ref_img_path = source_path # <-- aquí guardamos la ruta para el motor
+        self._ref_img_path = source_path
 
     # ------------------------------------------------------------------
     # LÓGICA DE LOS BOTONES - CARGAR REFERENCIA DESDE MAPA QGIS
     # ------------------------------------------------------------------
     def _on_load_reference_from_canvas_clicked(self):
         """
-        Activa una herramienta de rectángulo sobre el canvas de QGIS.
-        Al terminar el rectángulo, se renderiza la zona seleccionada
-        y se usa como imagen de referencia en la previsualización.
+        Activa herramienta de rectángulo sobre el canvas de QGIS.
         """
         if self.iface is None:
             QtWidgets.QMessageBox.warning(
@@ -426,9 +433,8 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
 
     def _on_canvas_rectangle_selected(self, rect: QgsRectangle):
         """
-        Callback llamado por RectangleMapTool cuando el usuario termina de
-        dibujar el rectángulo. Renderiza el mapa en esa extensión y actualiza
-        la previsualización de referencia.
+        Callback cuando el usuario termina de dibujar el rectángulo.
+        Renderiza el mapa en esa extensión y actualiza la previsualización.
         """
         if self.iface is None:
             return
@@ -467,7 +473,7 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
     def _render_reference_from_canvas(self, rect: QgsRectangle):
         """
         Renderiza el mapa de QGIS en la extensión del rectángulo dado y
-        guarda el resultado como pixmap de referencia.
+        guarda el resultado como pixmap de referencia y PNG temporal.
         """
         if self.iface is None:
             return
@@ -476,15 +482,15 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         if canvas is None:
             return
 
-        # Partimos de los ajustes actuales del canvas
+
         ms = canvas.mapSettings()
         ms.setExtent(rect)
 
-        # Tamaño de salida de la imagen (puedes ajustarlo)
+
         size = QtCore.QSize(512, 512)
         ms.setOutputSize(size)
 
-        # Crear imagen y pintor
+
         img = QtGui.QImage(size, QtGui.QImage.Format_ARGB32_Premultiplied)
         img.fill(QtCore.Qt.transparent)
 
@@ -505,29 +511,19 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
 
         self._ref_pixmap = pixmap
         self._update_reference_preview()
-    
-        def _render_reference_from_canvas(self, rect: QgsRectangle):
-            ...
-            pixmap = QtGui.QPixmap.fromImage(img)
-            if pixmap.isNull():
-                ...
-                return
 
-            self._ref_pixmap = pixmap
-            self._update_reference_preview()
+        # Guardar en fichero temporal para el motor de matching
+        tmp_dir = os.path.join(os.path.dirname(__file__), "tmp")
+        os.makedirs(tmp_dir, exist_ok=True)
+        tmp_path = os.path.join(tmp_dir, "ref_from_canvas_aoi.png")
+        pixmap.save(tmp_path, "PNG")
+        self._ref_img_path = tmp_path
 
-            # Guardar en fichero temporal para el motor de matching
-            tmp_dir = os.path.join(os.path.dirname(__file__), "tmp")
-            os.makedirs(tmp_dir, exist_ok=True)
-            tmp_path = os.path.join(tmp_dir, "ref_from_canvas_aoi.png")
-            pixmap.save(tmp_path, "PNG")
-            self._ref_img_path = tmp_path
-
-            # CRS del canvas como referencia
-            try:
-                self._ref_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
-            except Exception:
-                pass
+        # CRS del canvas como referencia
+        try:
+            self._ref_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        except Exception:
+            pass
 
 
     # ------------------------------------------------------------------
@@ -590,171 +586,169 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         self._update_float_preview()
         self._update_reference_preview()
 
-        def run_matching_from_ui(self):
-            """
-            Ejecuta el motor de matching (feature_matcher_cv) usando:
-              - Imagen flotante: editFloatingPath
-              - Referencia: self._ref_img_path (capa o AOI desde mapa)
-            Muestra:
-              - Imagen de matches en tab 'Matches'
-              - RMSE en label_rmse_value
-            """
-            # Comprobar imagen flotante
-            float_path = ""
-            try:
-                float_path = self.editFloatingPath.text().strip()
-            except AttributeError:
-                pass
-    
-            if not float_path or not os.path.exists(float_path):
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Imagen flotante no disponible",
-                    "Debes seleccionar una imagen a georreferenciar (flotante) primero.",
-                )
-                return
-    
-            # Comprobar referencia
-            if not self._ref_img_path or not os.path.exists(self._ref_img_path):
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Referencia no disponible",
-                    "Debes seleccionar una capa de referencia o definir una AOI desde el mapa de QGIS.",
-                )
-                return
-    
-            # Parámetros desde la UI
-            # Detector
-            try:
-                detector = self.comboDetector.currentText().strip()
-            except AttributeError:
-                detector = "ORB"
-    
-            # Matcher: mapear texto UI -> tipo motor
-            try:
-                matcher_ui = self.comboMatcher.currentText().strip().lower()
-            except AttributeError:
-                matcher_ui = "auto"
-    
-            if "flann" in matcher_ui:
-                matcher_type = "flann"
-            elif "bf" in matcher_ui or "brute" in matcher_ui:
-                matcher_type = "bf"
+    # ------------------------------------------------------------------
+    # MATCHING: MOTOR CV + ACTUALIZACIÓN UI
+    # ------------------------------------------------------------------
+    def run_matching_from_ui(self):
+        """
+        Ejecuta el motor de matching (feature_matcher_cv) usando:
+          - Imagen flotante: editFloatingPath
+          - Referencia: self._ref_img_path (capa o AOI desde mapa)
+        Muestra:
+          - Imagen de matches en tab 'Matches'
+          - RMSE en label_rmse_value
+        """
+        # Comprobar imagen flotante
+        float_path = ""
+        try:
+            float_path = self.editFloatingPath.text().strip()
+        except AttributeError:
+            pass
+
+        if not float_path or not os.path.exists(float_path):
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Imagen flotante no disponible",
+                "Debes seleccionar una imagen a georreferenciar (flotante) primero.",
+            )
+            return
+
+        # Comprobar referencia
+        if not self._ref_img_path or not os.path.exists(self._ref_img_path):
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Referencia no disponible",
+                "Debes seleccionar una capa de referencia o definir una AOI desde el mapa de QGIS.",
+            )
+            return
+
+        # Parámetros desde la UI
+        try:
+            detector = self.comboDetector.currentText().strip()
+        except AttributeError:
+            detector = "ORB"
+
+        try:
+            matcher_ui = self.comboMatcher.currentText().strip().lower()
+        except AttributeError:
+            matcher_ui = "auto"
+
+        if "flann" in matcher_ui:
+            matcher_type = "flann"
+        elif "bf" in matcher_ui or "brute" in matcher_ui:
+            matcher_type = "bf"
+        else:
+            matcher_type = "auto"
+
+        try:
+            ratio_thresh = float(self.spinRatio.value())
+        except AttributeError:
+            ratio_thresh = 0.75
+
+        ransac_thresh = 3.0
+        alpha_rmse = 0.15
+
+        # Barra de progreso y estado
+        try:
+            self.progressBar.setValue(5)
+            self.label_status_value.setText("Calculando matches...")
+        except Exception:
+            pass
+
+        # Llamar al motor para obtener detalles (incluye RMSE)
+        try:
+            details = feature_matcher_cv.match_details(
+                float_path,
+                self._ref_img_path,
+                detector=detector,
+                matcher_type=matcher_type,
+                ratio_thresh=ratio_thresh,
+                ransac_thresh=ransac_thresh,
+                alpha_rmse=alpha_rmse,
+            )
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error en matching",
+                f"Ocurrió un error al ejecutar el motor de matching:\n{e}",
+            )
+            return
+
+        rmse = details.get("rmse", None)
+
+        # Actualizar RMSE en la UI
+        try:
+            if rmse is None:
+                self.label_rmse_value.setText("-")
             else:
-                matcher_type = "auto"
-    
-            # Ratio test
-            try:
-                ratio_thresh = float(self.spinRatio.value())
-            except AttributeError:
-                ratio_thresh = 0.75
-    
-            # Umbral RANSAC (puedes exponerlo en la UI si quieres)
-            ransac_thresh = 3.0
-            alpha_rmse = 0.15  # peso del RMSE en el coste (no crítico para mostrar)
-    
-            # Opcional: actualizar barra de progreso antes de empezar
-            try:
-                self.progressBar.setValue(5)
-                self.label_status_value.setText("Calculando matches...")
-            except Exception:
-                pass
-    
-            # Llamar al motor para obtener detalles (incluye RMSE)
-            try:
-                details = feature_matcher_cv.match_details(
-                    float_path,
-                    self._ref_img_path,
-                    detector=detector,
-                    matcher_type=matcher_type,
-                    ratio_thresh=ratio_thresh,
-                    ransac_thresh=ransac_thresh,
-                    alpha_rmse=alpha_rmse,
-                )
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error en matching",
-                    f"Ocurrió un error al ejecutar el motor de matching:\n{e}",
-                )
-                return
-    
-            rmse = details.get("rmse", None)
-    
-            # Actualizar RMSE en la UI
-            try:
-                if rmse is None:
-                    self.label_rmse_value.setText("-")
-                else:
-                    self.label_rmse_value.setText(f"{rmse:.3f}")
-            except AttributeError:
-                pass
-    
-            # Dibujar imagen de matches con el motor
-            params_for_draw = {
-                "detector": detector,
-                "matcher_type": matcher_type,
-                "ratio_thresh": ratio_thresh,
-                "ransac_thresh": ransac_thresh,
-                "alpha_rmse": alpha_rmse,
-            }
-    
-            try:
-                vis = feature_matcher_cv.draw_matches(
-                    float_path,
-                    self._ref_img_path,
-                    params_for_draw,
-                    max_draw=80,
-                    annotate=True,
-                )
-            except Exception as e:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error al dibujar matches",
-                    f"Se han calculado los matches, pero no se pudo generar la imagen de visualización:\n{e}",
-                )
-                return
-    
-            # Convertir imagen OpenCV (BGR) a QPixmap y mostrar en labelMatchesPreview
-            try:
-                h, w = vis.shape[:2]
-                bytes_per_line = 3 * w
-                qimg = QtGui.QImage(
-                    vis.data, w, h, bytes_per_line, QtGui.QImage.Format_BGR888
-                )
-                pix = QtGui.QPixmap.fromImage(qimg)
-    
-                label = self.labelMatchesPreview
-                # Ajustar al tamaño del label manteniendo aspecto
-                scaled = pix.scaled(
-                    label.size(),
-                    QtCore.Qt.KeepAspectRatio,
-                    QtCore.Qt.SmoothTransformation,
-                )
-                label.setPixmap(scaled)
-                label.setText("")  # quitar "(Sin visualización)" si hubiera
-            except Exception as e:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error al mostrar matches",
-                    f"No se pudo mostrar la imagen de matches en la pestaña 'Matches':\n{e}",
-                )
-    
-            # Poner la pestaña de matches al frente
-            try:
-                idx = self.tabViews.indexOf(self.tabMatches)
-                if idx != -1:
-                    self.tabViews.setCurrentIndex(idx)
-            except Exception:
-                pass
-    
-            # Actualizar barra de progreso y estado
-            try:
-                self.progressBar.setValue(100)
-                if rmse is not None:
-                    self.label_status_value.setText(f"Matching completado (RMSE={rmse:.3f})")
-                else:
-                    self.label_status_value.setText("Matching completado (sin RMSE)")
-            except Exception:
-                pass
+                self.label_rmse_value.setText(f"{rmse:.3f}")
+        except AttributeError:
+            pass
+
+        # Dibujar imagen de matches con el motor
+        params_for_draw = {
+            "detector": detector,
+            "matcher_type": matcher_type,
+            "ratio_thresh": ratio_thresh,
+            "ransac_thresh": ransac_thresh,
+            "alpha_rmse": alpha_rmse,
+        }
+
+        try:
+            vis = feature_matcher_cv.draw_matches(
+                float_path,
+                self._ref_img_path,
+                params_for_draw,
+                max_draw=80,
+                annotate=True,
+            )
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Error al dibujar matches",
+                f"Se han calculado los matches, pero no se pudo generar la imagen de visualización:\n{e}",
+            )
+            return
+
+        # Convertir imagen OpenCV (BGR) a QPixmap y mostrar en labelMatchesPreview
+        try:
+            h, w = vis.shape[:2]
+            bytes_per_line = 3 * w
+            qimg = QtGui.QImage(
+                vis.data, w, h, bytes_per_line, QtGui.QImage.Format_BGR888
+            )
+            pix = QtGui.QPixmap.fromImage(qimg)
+
+            label = self.labelMatchesPreview
+            scaled = pix.scaled(
+                label.size(),
+                QtCore.Qt.KeepAspectRatio,
+                QtCore.Qt.SmoothTransformation,
+            )
+            label.setPixmap(scaled)
+            label.setText("")
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Error al mostrar matches",
+                f"No se pudo mostrar la imagen de matches en la pestaña 'Matches':\n{e}",
+            )
+
+        # Poner la pestaña de matches al frente
+        try:
+            idx = self.tabViews.indexOf(self.tabMatches)
+            if idx != -1:
+                self.tabViews.setCurrentIndex(idx)
+        except Exception:
+            pass
+
+        # Actualizar barra de progreso y estado
+        try:
+            self.progressBar.setValue(100)
+            if rmse is not None:
+                self.label_status_value.setText(f"Matching completado (RMSE={rmse:.3f})")
+            else:
+                self.label_status_value.setText("Matching completado (sin RMSE)")
+        except Exception:
+            pass
 

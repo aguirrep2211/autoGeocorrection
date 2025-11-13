@@ -20,7 +20,6 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <!-- Left: Stacked step panels -->
       <widget class="QStackedWidget" name="stackSteps">
        <property name="minimumSize">
         <size>
@@ -28,10 +27,8 @@
          <height>400</height>
         </size>
        </property>
-       <!-- Page 0: Fuentes -->
        <widget class="QWidget" name="pageSources">
         <layout class="QVBoxLayout" name="verticalLayout_sources">
-         <!-- Imagen flotante -->
          <item>
           <widget class="QGroupBox" name="groupFloating">
            <property name="title">
@@ -62,7 +59,6 @@
            </layout>
           </widget>
          </item>
-         <!-- Capa de referencia -->
          <item>
           <widget class="QGroupBox" name="groupReference">
            <property name="title">
@@ -100,7 +96,6 @@
            </layout>
           </widget>
          </item>
-         <!-- NUEVO: MDE -->
          <item>
           <widget class="QGroupBox" name="groupDEM">
            <property name="title">
@@ -131,13 +126,12 @@
            </layout>
           </widget>
          </item>
-         <!-- Spacer -->
          <item>
           <spacer name="verticalSpacer_sources">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <property name="sizeHint">
+           <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
              <height>40</height>
@@ -147,7 +141,6 @@
          </item>
         </layout>
        </widget>
-       <!-- Page 1: AOI -->
        <widget class="QWidget" name="pageAOI">
         <layout class="QVBoxLayout" name="verticalLayout_aoi">
          <item>
@@ -187,7 +180,7 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
-                <property name="sizeHint">
+                <property name="sizeHint" stdset="0">
                  <size>
                   <width>40</width>
                   <height>20</height>
@@ -212,7 +205,7 @@
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <property name="sizeHint">
+           <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
              <height>40</height>
@@ -222,7 +215,6 @@
          </item>
         </layout>
        </widget>
-       <!-- Page 2: Matching -->
        <widget class="QWidget" name="pageMatching">
         <layout class="QVBoxLayout" name="verticalLayout_matching">
          <item>
@@ -303,10 +295,10 @@
                <number>2</number>
               </property>
               <property name="singleStep">
-               <double>0.05</double>
+               <double>0.050000000000000</double>
               </property>
               <property name="value">
-               <double>0.75</double>
+               <double>0.750000000000000</double>
               </property>
              </widget>
             </item>
@@ -335,7 +327,7 @@
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <property name="sizeHint">
+           <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
              <height>40</height>
@@ -345,7 +337,6 @@
          </item>
         </layout>
        </widget>
-       <!-- Page 3: Salida -->
        <widget class="QWidget" name="pageOutput">
         <layout class="QVBoxLayout" name="verticalLayout_output">
          <item>
@@ -414,7 +405,7 @@
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
-           <property name="sizeHint">
+           <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
              <height>40</height>
@@ -425,12 +416,10 @@
         </layout>
        </widget>
       </widget>
-      <!-- Right: Tab views -->
       <widget class="QTabWidget" name="tabViews">
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <!-- Tab 0: lado a lado -->
        <widget class="QWidget" name="tabSideBySide">
         <attribute name="title">
          <string>Vista lado a lado</string>
@@ -459,6 +448,12 @@
             </property>
             <item>
              <widget class="QLabel" name="labelFloatPreview">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>256</width>
@@ -471,23 +466,17 @@
                 <height>256</height>
                </size>
               </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="frameShape">
                <enum>QFrame::StyledPanel</enum>
               </property>
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
               <property name="text">
                <string>(Sin imagen)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -517,6 +506,12 @@
             </property>
             <item>
              <widget class="QLabel" name="labelRefPreview">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>256</width>
@@ -529,23 +524,17 @@
                 <height>256</height>
                </size>
               </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="frameShape">
                <enum>QFrame::StyledPanel</enum>
               </property>
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
               <property name="text">
                <string>(Sin imagen)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -554,7 +543,6 @@
          </item>
         </layout>
        </widget>
-       <!-- Tab 1: Matches -->
        <widget class="QWidget" name="tabMatches">
         <attribute name="title">
          <string>Matches</string>
@@ -575,17 +563,16 @@
            <property name="frameShadow">
             <enum>QFrame::Sunken</enum>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
            <property name="text">
             <string>(Sin visualización)</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
-       <!-- Tab 2: Residuales -->
        <widget class="QWidget" name="tabResiduals">
         <attribute name="title">
          <string>Residuales</string>
@@ -606,11 +593,11 @@
            <property name="frameShadow">
             <enum>QFrame::Sunken</enum>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
            <property name="text">
             <string>(Sin visualización)</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -619,7 +606,6 @@
       </widget>
      </widget>
     </item>
-    <!-- Bottom status frame -->
     <item>
      <widget class="QFrame" name="frameBottom">
       <property name="frameShape">
@@ -632,16 +618,9 @@
        <item>
         <layout class="QHBoxLayout" name="hbox_step_controls">
          <item>
-          <widget class="QPushButton" name="btnPrevStep">
-           <property name="text">
-            <string>&lt; Anterior</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="btnNextStep">
            <property name="text">
-            <string>Siguiente &gt;</string>
+            <string>GET MATCHES &gt;</string>
            </property>
           </widget>
          </item>
@@ -652,7 +631,7 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <property name="sizeHint">
+         <property name="sizeHint" stdset="0">
           <size>
            <width>40</width>
            <height>20</height>
@@ -690,7 +669,6 @@
            </property>
           </widget>
          </item>
-         <!-- NUEVO: barra de progreso -->
          <item row="2" column="0">
           <widget class="QLabel" name="label_progress_title">
            <property name="text">
@@ -721,14 +699,13 @@
     </item>
    </layout>
   </widget>
-  <!-- Menú -->
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
      <width>1220</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuArchivo">
@@ -753,7 +730,6 @@
    <addaction name="menuAyuda"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <!-- Acciones -->
   <action name="actionLoadFloating">
    <property name="text">
     <string>Cargar imagen flotante...</string>

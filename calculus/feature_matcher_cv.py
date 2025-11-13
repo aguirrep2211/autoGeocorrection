@@ -317,7 +317,7 @@ def match_details(img_path1: str,
     img1 = _read_gray(img_path1)
     img2 = _read_gray(img_path2)
 
-    # Calcula score + máscara
+    # Calcula score + máscara con el pipeline normal
     res = match_and_score(
         img1, img2,
         detector_name=detector,
@@ -329,8 +329,9 @@ def match_details(img_path1: str,
     )
 
     # Recompute KPs + good para extraer puntos inlier
-    detector_obj = _create_detector(detector, **{k: v for k, v in detector_params.items()
-                                                 if k.startswith(("orb_","sift_","akaze_"))})
+    det_params = {k: v for k, v in detector_params.items()
+                  if k.startswith(("orb_","sift_","akaze_"))}
+    detector_obj = _create_detector(detector, **det_params)
     kp1, d1 = detect_and_describe(img1, detector_obj)
     kp2, d2 = detect_and_describe(img2, detector_obj)
     desc_dtype = None if d1 is None else d1.dtype
@@ -338,9 +339,15 @@ def match_details(img_path1: str,
     good = knn_ratio_match(d1, d2, matcher, ratio_thresh=ratio_thresh)
 
     points_src, points_dst = [], []
-    if res.mask_inliers is not None and len(good) > 0:
-        for i, m in enumerate(good):
-            if res.mask_inliers[i]:
+    mask = res.mask_inliers
+
+    if mask is not None and len(good) > 0:
+        # ⚠️ Protección: puede que la máscara y la lista good no tengan la misma longitud.
+        # Usamos solo hasta el mínimo para evitar "index out of bounds".
+        n = min(len(good), len(mask))
+        for i in range(n):
+            if mask[i]:
+                m = good[i]
                 x, y = kp1[m.queryIdx].pt
                 xp, yp = kp2[m.trainIdx].pt
                 points_src.append([float(x), float(y)])
@@ -364,6 +371,7 @@ def match_details(img_path1: str,
         "points_src": points_src,  # Nx2
         "points_dst": points_dst,  # Nx2
     }
+
 
 
 def save_homographies_json(pairs: Sequence[Tuple[str, str]],
