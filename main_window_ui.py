@@ -125,62 +125,34 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_sources.addWidget(self.groupDEM)
 
-        self.verticalSpacer_sources = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_sources.addItem(self.verticalSpacer_sources)
-
-        self.stackSteps.addWidget(self.pageSources)
-        self.pageAOI = QWidget()
-        self.pageAOI.setObjectName(u"pageAOI")
-        self.verticalLayout_aoi = QVBoxLayout(self.pageAOI)
-        self.verticalLayout_aoi.setObjectName(u"verticalLayout_aoi")
-        self.groupAOI = QGroupBox(self.pageAOI)
+        self.groupAOI = QGroupBox(self.pageSources)
         self.groupAOI.setObjectName(u"groupAOI")
-        self.vbox_aoi = QVBoxLayout(self.groupAOI)
-        self.vbox_aoi.setSpacing(6)
-        self.vbox_aoi.setObjectName(u"vbox_aoi")
-        self.labelAOIInfo = QLabel(self.groupAOI)
-        self.labelAOIInfo.setObjectName(u"labelAOIInfo")
-
-        self.vbox_aoi.addWidget(self.labelAOIInfo)
-
-        self.hbox_aoi_buttons = QHBoxLayout()
-        self.hbox_aoi_buttons.setObjectName(u"hbox_aoi_buttons")
+        self.grid_aoi = QGridLayout(self.groupAOI)
+        self.grid_aoi.setObjectName(u"grid_aoi")
         self.btnDrawAOI = QPushButton(self.groupAOI)
         self.btnDrawAOI.setObjectName(u"btnDrawAOI")
 
-        self.hbox_aoi_buttons.addWidget(self.btnDrawAOI)
+        self.grid_aoi.addWidget(self.btnDrawAOI, 0, 0, 1, 1)
 
         self.btnClearAOI = QPushButton(self.groupAOI)
         self.btnClearAOI.setObjectName(u"btnClearAOI")
 
-        self.hbox_aoi_buttons.addWidget(self.btnClearAOI)
-
-        self.horizontalSpacer_aoi = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.hbox_aoi_buttons.addItem(self.horizontalSpacer_aoi)
-
-
-        self.vbox_aoi.addLayout(self.hbox_aoi_buttons)
+        self.grid_aoi.addWidget(self.btnClearAOI, 0, 1, 1, 1)
 
         self.labelAOIStatus = QLabel(self.groupAOI)
         self.labelAOIStatus.setObjectName(u"labelAOIStatus")
 
-        self.vbox_aoi.addWidget(self.labelAOIStatus)
+        self.grid_aoi.addWidget(self.labelAOIStatus, 1, 0, 1, 2)
 
 
-        self.verticalLayout_aoi.addWidget(self.groupAOI)
+        self.verticalLayout_sources.addWidget(self.groupAOI)
 
-        self.verticalSpacer_aoi = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_aoi.addItem(self.verticalSpacer_aoi)
-
-        self.stackSteps.addWidget(self.pageAOI)
-        self.pageMatching = QWidget()
-        self.pageMatching.setObjectName(u"pageMatching")
-        self.verticalLayout_matching = QVBoxLayout(self.pageMatching)
-        self.verticalLayout_matching.setObjectName(u"verticalLayout_matching")
-        self.groupMatchingParams = QGroupBox(self.pageMatching)
+        self.stackSteps.addWidget(self.pageSources)
+        self.pageParams = QWidget()
+        self.pageParams.setObjectName(u"pageParams")
+        self.verticalLayout_params = QVBoxLayout(self.pageParams)
+        self.verticalLayout_params.setObjectName(u"verticalLayout_params")
+        self.groupMatchingParams = QGroupBox(self.pageParams)
         self.groupMatchingParams.setObjectName(u"groupMatchingParams")
         self.grid_matching = QGridLayout(self.groupMatchingParams)
         self.grid_matching.setObjectName(u"grid_matching")
@@ -203,7 +175,8 @@ class Ui_MainWindow(object):
 
         self.spinMaxFeatures = QSpinBox(self.groupMatchingParams)
         self.spinMaxFeatures.setObjectName(u"spinMaxFeatures")
-        self.spinMaxFeatures.setMaximum(100000)
+        self.spinMaxFeatures.setMinimum(100)
+        self.spinMaxFeatures.setMaximum(50000)
         self.spinMaxFeatures.setValue(5000)
 
         self.grid_matching.addWidget(self.spinMaxFeatures, 1, 1, 1, 1)
@@ -225,13 +198,14 @@ class Ui_MainWindow(object):
 
         self.grid_matching.addWidget(self.label_ratio, 3, 0, 1, 1)
 
-        self.spinRatio = QDoubleSpinBox(self.groupMatchingParams)
-        self.spinRatio.setObjectName(u"spinRatio")
-        self.spinRatio.setDecimals(2)
-        self.spinRatio.setSingleStep(0.050000000000000)
-        self.spinRatio.setValue(0.750000000000000)
+        self.spinRatioTest = QDoubleSpinBox(self.groupMatchingParams)
+        self.spinRatioTest.setObjectName(u"spinRatioTest")
+        self.spinRatioTest.setMinimum(0.100000000000000)
+        self.spinRatioTest.setMaximum(1.000000000000000)
+        self.spinRatioTest.setSingleStep(0.050000000000000)
+        self.spinRatioTest.setValue(0.750000000000000)
 
-        self.grid_matching.addWidget(self.spinRatio, 3, 1, 1, 1)
+        self.grid_matching.addWidget(self.spinRatioTest, 3, 1, 1, 1)
 
         self.label_minMatches = QLabel(self.groupMatchingParams)
         self.label_minMatches.setObjectName(u"label_minMatches")
@@ -240,24 +214,16 @@ class Ui_MainWindow(object):
 
         self.spinMinMatches = QSpinBox(self.groupMatchingParams)
         self.spinMinMatches.setObjectName(u"spinMinMatches")
-        self.spinMinMatches.setMaximum(10000)
+        self.spinMinMatches.setMinimum(4)
+        self.spinMinMatches.setMaximum(1000)
         self.spinMinMatches.setValue(20)
 
         self.grid_matching.addWidget(self.spinMinMatches, 4, 1, 1, 1)
 
 
-        self.verticalLayout_matching.addWidget(self.groupMatchingParams)
+        self.verticalLayout_params.addWidget(self.groupMatchingParams)
 
-        self.verticalSpacer_matching = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_matching.addItem(self.verticalSpacer_matching)
-
-        self.stackSteps.addWidget(self.pageMatching)
-        self.pageOutput = QWidget()
-        self.pageOutput.setObjectName(u"pageOutput")
-        self.verticalLayout_output = QVBoxLayout(self.pageOutput)
-        self.verticalLayout_output.setObjectName(u"verticalLayout_output")
-        self.groupOutput = QGroupBox(self.pageOutput)
+        self.groupOutput = QGroupBox(self.pageParams)
         self.groupOutput.setObjectName(u"groupOutput")
         self.grid_output = QGridLayout(self.groupOutput)
         self.grid_output.setObjectName(u"grid_output")
@@ -284,7 +250,7 @@ class Ui_MainWindow(object):
         self.comboOutputCrs = QComboBox(self.groupOutput)
         self.comboOutputCrs.setObjectName(u"comboOutputCrs")
 
-        self.grid_output.addWidget(self.comboOutputCrs, 1, 1, 1, 2)
+        self.grid_output.addWidget(self.comboOutputCrs, 1, 1, 1, 1)
 
         self.label_outputFormat = QLabel(self.groupOutput)
         self.label_outputFormat.setObjectName(u"label_outputFormat")
@@ -299,103 +265,83 @@ class Ui_MainWindow(object):
         self.grid_output.addWidget(self.comboOutputFormat, 2, 1, 1, 1)
 
 
-        self.verticalLayout_output.addWidget(self.groupOutput)
+        self.verticalLayout_params.addWidget(self.groupOutput)
 
-        self.verticalSpacer_output = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_output.addItem(self.verticalSpacer_output)
-
-        self.stackSteps.addWidget(self.pageOutput)
+        self.stackSteps.addWidget(self.pageParams)
         self.splitterMain.addWidget(self.stackSteps)
-        self.tabViews = QTabWidget(self.splitterMain)
+        self.framePreview = QFrame(self.splitterMain)
+        self.framePreview.setObjectName(u"framePreview")
+        self.framePreview.setFrameShape(QFrame.StyledPanel)
+        self.framePreview.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_preview = QVBoxLayout(self.framePreview)
+        self.verticalLayout_preview.setObjectName(u"verticalLayout_preview")
+        self.splitterPreview = QSplitter(self.framePreview)
+        self.splitterPreview.setObjectName(u"splitterPreview")
+        self.splitterPreview.setOrientation(Qt.Horizontal)
+        self.groupFloatPreview = QGroupBox(self.splitterPreview)
+        self.groupFloatPreview.setObjectName(u"groupFloatPreview")
+        self.verticalLayout_floatPreview = QVBoxLayout(self.groupFloatPreview)
+        self.verticalLayout_floatPreview.setObjectName(u"verticalLayout_floatPreview")
+        self.labelFloatPreview = QLabel(self.groupFloatPreview)
+        self.labelFloatPreview.setObjectName(u"labelFloatPreview")
+
+        self.verticalLayout_floatPreview.addWidget(self.labelFloatPreview)
+
+        self.splitterPreview.addWidget(self.groupFloatPreview)
+        self.groupRefPreview = QGroupBox(self.splitterPreview)
+        self.groupRefPreview.setObjectName(u"groupRefPreview")
+        self.verticalLayout_refPreview = QVBoxLayout(self.groupRefPreview)
+        self.verticalLayout_refPreview.setObjectName(u"verticalLayout_refPreview")
+        self.labelRefPreview = QLabel(self.groupRefPreview)
+        self.labelRefPreview.setObjectName(u"labelRefPreview")
+
+        self.verticalLayout_refPreview.addWidget(self.labelRefPreview)
+
+        self.splitterPreview.addWidget(self.groupRefPreview)
+
+        self.verticalLayout_preview.addWidget(self.splitterPreview)
+
+        self.tabViews = QTabWidget(self.framePreview)
         self.tabViews.setObjectName(u"tabViews")
         self.tabSideBySide = QWidget()
         self.tabSideBySide.setObjectName(u"tabSideBySide")
-        self.hbox_side_by_side = QHBoxLayout(self.tabSideBySide)
-        self.hbox_side_by_side.setObjectName(u"hbox_side_by_side")
-        self.groupFloatPreview = QGroupBox(self.tabSideBySide)
-        self.groupFloatPreview.setObjectName(u"groupFloatPreview")
-        self.vbox_float_preview = QVBoxLayout(self.groupFloatPreview)
-        self.vbox_float_preview.setSpacing(0)
-        self.vbox_float_preview.setObjectName(u"vbox_float_preview")
-        self.vbox_float_preview.setContentsMargins(0, 0, 0, 0)
-        self.labelFloatPreview = QLabel(self.groupFloatPreview)
-        self.labelFloatPreview.setObjectName(u"labelFloatPreview")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.labelFloatPreview.sizePolicy().hasHeightForWidth())
-        self.labelFloatPreview.setSizePolicy(sizePolicy)
-        self.labelFloatPreview.setMinimumSize(QSize(256, 256))
-        self.labelFloatPreview.setMaximumSize(QSize(256, 256))
-        self.labelFloatPreview.setFrameShape(QFrame.StyledPanel)
-        self.labelFloatPreview.setFrameShadow(QFrame.Sunken)
-        self.labelFloatPreview.setAlignment(Qt.AlignCenter)
+        self.verticalLayout_sideBySide = QVBoxLayout(self.tabSideBySide)
+        self.verticalLayout_sideBySide.setObjectName(u"verticalLayout_sideBySide")
+        self.labelSideBySidePreview = QLabel(self.tabSideBySide)
+        self.labelSideBySidePreview.setObjectName(u"labelSideBySidePreview")
 
-        self.vbox_float_preview.addWidget(self.labelFloatPreview)
-
-
-        self.hbox_side_by_side.addWidget(self.groupFloatPreview)
-
-        self.groupRefPreview = QGroupBox(self.tabSideBySide)
-        self.groupRefPreview.setObjectName(u"groupRefPreview")
-        self.vbox_ref_preview = QVBoxLayout(self.groupRefPreview)
-        self.vbox_ref_preview.setSpacing(0)
-        self.vbox_ref_preview.setObjectName(u"vbox_ref_preview")
-        self.vbox_ref_preview.setContentsMargins(0, 0, 0, 0)
-        self.labelRefPreview = QLabel(self.groupRefPreview)
-        self.labelRefPreview.setObjectName(u"labelRefPreview")
-        sizePolicy.setHeightForWidth(self.labelRefPreview.sizePolicy().hasHeightForWidth())
-        self.labelRefPreview.setSizePolicy(sizePolicy)
-        self.labelRefPreview.setMinimumSize(QSize(256, 256))
-        self.labelRefPreview.setMaximumSize(QSize(256, 256))
-        self.labelRefPreview.setFrameShape(QFrame.StyledPanel)
-        self.labelRefPreview.setFrameShadow(QFrame.Sunken)
-        self.labelRefPreview.setAlignment(Qt.AlignCenter)
-
-        self.vbox_ref_preview.addWidget(self.labelRefPreview)
-
-
-        self.hbox_side_by_side.addWidget(self.groupRefPreview)
+        self.verticalLayout_sideBySide.addWidget(self.labelSideBySidePreview)
 
         self.tabViews.addTab(self.tabSideBySide, "")
         self.tabMatches = QWidget()
         self.tabMatches.setObjectName(u"tabMatches")
-        self.vbox_matches = QVBoxLayout(self.tabMatches)
-        self.vbox_matches.setObjectName(u"vbox_matches")
-        self.labelMatchesInfo = QLabel(self.tabMatches)
-        self.labelMatchesInfo.setObjectName(u"labelMatchesInfo")
-
-        self.vbox_matches.addWidget(self.labelMatchesInfo)
-
+        self.verticalLayout_matches = QVBoxLayout(self.tabMatches)
+        self.verticalLayout_matches.setObjectName(u"verticalLayout_matches")
         self.labelMatchesPreview = QLabel(self.tabMatches)
         self.labelMatchesPreview.setObjectName(u"labelMatchesPreview")
-        self.labelMatchesPreview.setFrameShape(QFrame.StyledPanel)
-        self.labelMatchesPreview.setFrameShadow(QFrame.Sunken)
-        self.labelMatchesPreview.setAlignment(Qt.AlignCenter)
 
-        self.vbox_matches.addWidget(self.labelMatchesPreview)
+        self.verticalLayout_matches.addWidget(self.labelMatchesPreview)
 
         self.tabViews.addTab(self.tabMatches, "")
         self.tabResiduals = QWidget()
         self.tabResiduals.setObjectName(u"tabResiduals")
-        self.vbox_residuals = QVBoxLayout(self.tabResiduals)
-        self.vbox_residuals.setObjectName(u"vbox_residuals")
+        self.verticalLayout_residuals = QVBoxLayout(self.tabResiduals)
+        self.verticalLayout_residuals.setObjectName(u"verticalLayout_residuals")
         self.labelResidualsInfo = QLabel(self.tabResiduals)
         self.labelResidualsInfo.setObjectName(u"labelResidualsInfo")
 
-        self.vbox_residuals.addWidget(self.labelResidualsInfo)
+        self.verticalLayout_residuals.addWidget(self.labelResidualsInfo)
 
         self.labelResidualsPreview = QLabel(self.tabResiduals)
         self.labelResidualsPreview.setObjectName(u"labelResidualsPreview")
-        self.labelResidualsPreview.setFrameShape(QFrame.StyledPanel)
-        self.labelResidualsPreview.setFrameShadow(QFrame.Sunken)
-        self.labelResidualsPreview.setAlignment(Qt.AlignCenter)
 
-        self.vbox_residuals.addWidget(self.labelResidualsPreview)
+        self.verticalLayout_residuals.addWidget(self.labelResidualsPreview)
 
         self.tabViews.addTab(self.tabResiduals, "")
-        self.splitterMain.addWidget(self.tabViews)
+
+        self.verticalLayout_preview.addWidget(self.tabViews)
+
+        self.splitterMain.addWidget(self.framePreview)
 
         self.verticalLayout_main.addWidget(self.splitterMain)
 
@@ -405,19 +351,24 @@ class Ui_MainWindow(object):
         self.frameBottom.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_bottom = QHBoxLayout(self.frameBottom)
         self.horizontalLayout_bottom.setObjectName(u"horizontalLayout_bottom")
-        self.hbox_step_controls = QHBoxLayout()
-        self.hbox_step_controls.setObjectName(u"hbox_step_controls")
-        self.btnNextStep = QPushButton(self.frameBottom)
-        self.btnNextStep.setObjectName(u"btnNextStep")
+        self.hbox_exports = QHBoxLayout()
+        self.hbox_exports.setObjectName(u"hbox_exports")
+        self.btnExportTransform = QPushButton(self.frameBottom)
+        self.btnExportTransform.setObjectName(u"btnExportTransform")
 
-        self.hbox_step_controls.addWidget(self.btnNextStep)
+        self.hbox_exports.addWidget(self.btnExportTransform)
+
+        self.btnExportGCPs = QPushButton(self.frameBottom)
+        self.btnExportGCPs.setObjectName(u"btnExportGCPs")
+
+        self.hbox_exports.addWidget(self.btnExportGCPs)
 
 
-        self.horizontalLayout_bottom.addLayout(self.hbox_step_controls)
+        self.horizontalLayout_bottom.addLayout(self.hbox_exports)
 
-        self.horizontalSpacer_bottom = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_bottom_left = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.horizontalLayout_bottom.addItem(self.horizontalSpacer_bottom)
+        self.horizontalLayout_bottom.addItem(self.horizontalSpacer_bottom_left)
 
         self.grid_status = QGridLayout()
         self.grid_status.setObjectName(u"grid_status")
@@ -428,6 +379,7 @@ class Ui_MainWindow(object):
 
         self.label_status_value = QLabel(self.frameBottom)
         self.label_status_value.setObjectName(u"label_status_value")
+        self.label_status_value.setWordWrap(True)
 
         self.grid_status.addWidget(self.label_status_value, 0, 1, 1, 1)
 
@@ -458,6 +410,20 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_bottom.addLayout(self.grid_status)
 
+        self.horizontalSpacer_bottom_right = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_bottom.addItem(self.horizontalSpacer_bottom_right)
+
+        self.hbox_step_controls = QHBoxLayout()
+        self.hbox_step_controls.setObjectName(u"hbox_step_controls")
+        self.btnNextStep = QPushButton(self.frameBottom)
+        self.btnNextStep.setObjectName(u"btnNextStep")
+
+        self.hbox_step_controls.addWidget(self.btnNextStep)
+
+
+        self.horizontalLayout_bottom.addLayout(self.hbox_step_controls)
+
 
         self.verticalLayout_main.addWidget(self.frameBottom)
 
@@ -479,9 +445,7 @@ class Ui_MainWindow(object):
         self.menuArchivo.addAction(self.actionLoadFloating)
         self.menuArchivo.addAction(self.actionLoadReference)
         self.menuArchivo.addAction(self.actionLoadBasemap)
-        self.menuArchivo.addSeparator()
         self.menuArchivo.addAction(self.actionExportOrtho)
-        self.menuArchivo.addSeparator()
         self.menuArchivo.addAction(self.actionSalir)
         self.menuAyuda.addAction(self.actionAbout)
 
@@ -515,7 +479,6 @@ class Ui_MainWindow(object):
         self.btnBrowseDEM.setText(QCoreApplication.translate("MainWindow", u"Examinar...", None))
         self.labelDEMInfo.setText(QCoreApplication.translate("MainWindow", u"No hay MDE cargado", None))
         self.groupAOI.setTitle(QCoreApplication.translate("MainWindow", u"\u00c1rea de Inter\u00e9s (AOI)", None))
-        self.labelAOIInfo.setText(QCoreApplication.translate("MainWindow", u"Defina un rect\u00e1ngulo de inter\u00e9s sobre la referencia.", None))
         self.btnDrawAOI.setText(QCoreApplication.translate("MainWindow", u"Dibujar AOI", None))
         self.btnClearAOI.setText(QCoreApplication.translate("MainWindow", u"Limpiar AOI", None))
         self.labelAOIStatus.setText(QCoreApplication.translate("MainWindow", u"AOI no definida", None))
@@ -544,19 +507,21 @@ class Ui_MainWindow(object):
         self.labelFloatPreview.setText(QCoreApplication.translate("MainWindow", u"(Sin imagen)", None))
         self.groupRefPreview.setTitle(QCoreApplication.translate("MainWindow", u"Referencia", None))
         self.labelRefPreview.setText(QCoreApplication.translate("MainWindow", u"(Sin imagen)", None))
+        self.labelSideBySidePreview.setText(QCoreApplication.translate("MainWindow", u"(Sin visualizaci\u00f3n)", None))
         self.tabViews.setTabText(self.tabViews.indexOf(self.tabSideBySide), QCoreApplication.translate("MainWindow", u"Vista lado a lado", None))
-        self.labelMatchesInfo.setText(QCoreApplication.translate("MainWindow", u"Visualizaci\u00f3n de puntos emparejados entre la imagen flotante y la referencia.", None))
         self.labelMatchesPreview.setText(QCoreApplication.translate("MainWindow", u"(Sin visualizaci\u00f3n)", None))
         self.tabViews.setTabText(self.tabViews.indexOf(self.tabMatches), QCoreApplication.translate("MainWindow", u"Matches", None))
-        self.labelResidualsInfo.setText(QCoreApplication.translate("MainWindow", u"Mapa o gr\u00e1fica de residuales de la transformaci\u00f3n.", None))
+        self.labelResidualsInfo.setText(QCoreApplication.translate("MainWindow", u"Aqu\u00ed se mostrar\u00e1 la informaci\u00f3n o gr\u00e1fica de residuales de la transformaci\u00f3n.", None))
         self.labelResidualsPreview.setText(QCoreApplication.translate("MainWindow", u"(Sin visualizaci\u00f3n)", None))
-        self.tabViews.setTabText(self.tabViews.indexOf(self.tabResiduals), QCoreApplication.translate("MainWindow", u"Residuales", None))
-        self.btnNextStep.setText(QCoreApplication.translate("MainWindow", u"GET MATCHES >", None))
-        self.label_status_title.setText(QCoreApplication.translate("MainWindow", u"Estado:", None))
-        self.label_status_value.setText(QCoreApplication.translate("MainWindow", u"Listo", None))
+        self.tabViews.setTabText(self.tabViews.indexOf(self.tabResiduals), QCoreApplication.translate("MainWindow", u"Resultado", None))
+        self.btnExportTransform.setText(QCoreApplication.translate("MainWindow", u"Exportar matriz", None))
+        self.btnExportGCPs.setText(QCoreApplication.translate("MainWindow", u"Exportar puntos de control", None))
+        self.label_status_title.setText(QCoreApplication.translate("MainWindow", u"Matriz de transformaci\u00f3n:", None))
+        self.label_status_value.setText(QCoreApplication.translate("MainWindow", u"(sin calcular)", None))
         self.label_rmse_title.setText(QCoreApplication.translate("MainWindow", u"RMSE:", None))
         self.label_rmse_value.setText(QCoreApplication.translate("MainWindow", u"-", None))
         self.label_progress_title.setText(QCoreApplication.translate("MainWindow", u"Progreso:", None))
+        self.btnNextStep.setText(QCoreApplication.translate("MainWindow", u"GET MATCHES >", None))
         self.menuArchivo.setTitle(QCoreApplication.translate("MainWindow", u"Archivo", None))
         self.menuAyuda.setTitle(QCoreApplication.translate("MainWindow", u"Ayuda", None))
     # retranslateUi

@@ -127,70 +127,26 @@
           </widget>
          </item>
          <item>
-          <spacer name="verticalSpacer_sources">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageAOI">
-        <layout class="QVBoxLayout" name="verticalLayout_aoi">
-         <item>
           <widget class="QGroupBox" name="groupAOI">
            <property name="title">
             <string>Área de Interés (AOI)</string>
            </property>
-           <layout class="QVBoxLayout" name="vbox_aoi">
-            <property name="spacing">
-             <number>6</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="labelAOIInfo">
+           <layout class="QGridLayout" name="grid_aoi">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="btnDrawAOI">
               <property name="text">
-               <string>Defina un rectángulo de interés sobre la referencia.</string>
+               <string>Dibujar AOI</string>
               </property>
              </widget>
             </item>
-            <item>
-             <layout class="QHBoxLayout" name="hbox_aoi_buttons">
-              <item>
-               <widget class="QPushButton" name="btnDrawAOI">
-                <property name="text">
-                 <string>Dibujar AOI</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="btnClearAOI">
-                <property name="text">
-                 <string>Limpiar AOI</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_aoi">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="btnClearAOI">
+              <property name="text">
+               <string>Limpiar AOI</string>
+              </property>
+             </widget>
             </item>
-            <item>
+            <item row="1" column="0" colspan="2">
              <widget class="QLabel" name="labelAOIStatus">
               <property name="text">
                <string>AOI no definida</string>
@@ -200,23 +156,10 @@
            </layout>
           </widget>
          </item>
-         <item>
-          <spacer name="verticalSpacer_aoi">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="pageMatching">
-        <layout class="QVBoxLayout" name="verticalLayout_matching">
+       <widget class="QWidget" name="pageParams">
+        <layout class="QVBoxLayout" name="verticalLayout_params">
          <item>
           <widget class="QGroupBox" name="groupMatchingParams">
            <property name="title">
@@ -253,8 +196,11 @@
             </item>
             <item row="1" column="1">
              <widget class="QSpinBox" name="spinMaxFeatures">
+              <property name="minimum">
+               <number>100</number>
+              </property>
               <property name="maximum">
-               <number>100000</number>
+               <number>50000</number>
               </property>
               <property name="value">
                <number>5000</number>
@@ -290,9 +236,12 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="spinRatio">
-              <property name="decimals">
-               <number>2</number>
+             <widget class="QDoubleSpinBox" name="spinRatioTest">
+              <property name="minimum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>1.000000000000000</double>
               </property>
               <property name="singleStep">
                <double>0.050000000000000</double>
@@ -311,8 +260,11 @@
             </item>
             <item row="4" column="1">
              <widget class="QSpinBox" name="spinMinMatches">
+              <property name="minimum">
+               <number>4</number>
+              </property>
               <property name="maximum">
-               <number>10000</number>
+               <number>1000</number>
               </property>
               <property name="value">
                <number>20</number>
@@ -322,23 +274,6 @@
            </layout>
           </widget>
          </item>
-         <item>
-          <spacer name="verticalSpacer_matching">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="pageOutput">
-        <layout class="QVBoxLayout" name="verticalLayout_output">
          <item>
           <widget class="QGroupBox" name="groupOutput">
            <property name="title">
@@ -373,7 +308,7 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="1" colspan="2">
+            <item row="1" column="1">
              <widget class="QComboBox" name="comboOutputCrs"/>
             </item>
             <item row="2" column="0">
@@ -400,209 +335,109 @@
            </layout>
           </widget>
          </item>
-         <item>
-          <spacer name="verticalSpacer_output">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
       </widget>
-      <widget class="QTabWidget" name="tabViews">
-       <property name="currentIndex">
-        <number>0</number>
+      <widget class="QFrame" name="framePreview">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
        </property>
-       <widget class="QWidget" name="tabSideBySide">
-        <attribute name="title">
-         <string>Vista lado a lado</string>
-        </attribute>
-        <layout class="QHBoxLayout" name="hbox_side_by_side">
-         <item>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_preview">
+        <item>
+         <widget class="QSplitter" name="splitterPreview">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
           <widget class="QGroupBox" name="groupFloatPreview">
            <property name="title">
             <string>Imagen flotante</string>
            </property>
-           <layout class="QVBoxLayout" name="vbox_float_preview">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_floatPreview">
             <item>
              <widget class="QLabel" name="labelFloatPreview">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>256</width>
-                <height>256</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>256</width>
-                <height>256</height>
-               </size>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Sunken</enum>
-              </property>
               <property name="text">
                <string>(Sin imagen)</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
            </layout>
           </widget>
-         </item>
-         <item>
           <widget class="QGroupBox" name="groupRefPreview">
            <property name="title">
             <string>Referencia</string>
            </property>
-           <layout class="QVBoxLayout" name="vbox_ref_preview">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_refPreview">
             <item>
              <widget class="QLabel" name="labelRefPreview">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>256</width>
-                <height>256</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>256</width>
-                <height>256</height>
-               </size>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Sunken</enum>
-              </property>
               <property name="text">
                <string>(Sin imagen)</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
            </layout>
           </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabMatches">
-        <attribute name="title">
-         <string>Matches</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="vbox_matches">
-         <item>
-          <widget class="QLabel" name="labelMatchesInfo">
-           <property name="text">
-            <string>Visualización de puntos emparejados entre la imagen flotante y la referencia.</string>
-           </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTabWidget" name="tabViews">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tabSideBySide">
+           <attribute name="title">
+            <string>Vista lado a lado</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_sideBySide">
+            <item>
+             <widget class="QLabel" name="labelSideBySidePreview">
+              <property name="text">
+               <string>(Sin visualización)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="labelMatchesPreview">
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string>(Sin visualización)</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
+          <widget class="QWidget" name="tabMatches">
+           <attribute name="title">
+            <string>Matches</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_matches">
+            <item>
+             <widget class="QLabel" name="labelMatchesPreview">
+              <property name="text">
+               <string>(Sin visualización)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabResiduals">
-        <attribute name="title">
-         <string>Residuales</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="vbox_residuals">
-         <item>
-          <widget class="QLabel" name="labelResidualsInfo">
-           <property name="text">
-            <string>Mapa o gráfica de residuales de la transformación.</string>
-           </property>
+          <widget class="QWidget" name="tabResiduals">
+           <attribute name="title">
+            <string>Resultado</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_residuals">
+            <item>
+             <widget class="QLabel" name="labelResidualsInfo">
+              <property name="text">
+               <string>Aquí se mostrará la información o gráfica de residuales de la transformación.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelResidualsPreview">
+              <property name="text">
+               <string>(Sin visualización)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="labelResidualsPreview">
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string>(Sin visualización)</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -616,18 +451,25 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_bottom">
        <item>
-        <layout class="QHBoxLayout" name="hbox_step_controls">
+        <layout class="QHBoxLayout" name="hbox_exports">
          <item>
-          <widget class="QPushButton" name="btnNextStep">
+          <widget class="QPushButton" name="btnExportTransform">
            <property name="text">
-            <string>GET MATCHES &gt;</string>
+            <string>Exportar matriz</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnExportGCPs">
+           <property name="text">
+            <string>Exportar puntos de control</string>
            </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
-        <spacer name="horizontalSpacer_bottom">
+        <spacer name="horizontalSpacer_bottom_left">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -644,14 +486,17 @@
          <item row="0" column="0">
           <widget class="QLabel" name="label_status_title">
            <property name="text">
-            <string>Estado:</string>
+            <string>Matriz de transformación:</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
           <widget class="QLabel" name="label_status_value">
            <property name="text">
-            <string>Listo</string>
+            <string>(sin calcular)</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -694,6 +539,30 @@
          </item>
         </layout>
        </item>
+       <item>
+        <spacer name="horizontalSpacer_bottom_right">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="hbox_step_controls">
+         <item>
+          <widget class="QPushButton" name="btnNextStep">
+           <property name="text">
+            <string>GET MATCHES &gt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </widget>
     </item>
@@ -715,9 +584,7 @@
     <addaction name="actionLoadFloating"/>
     <addaction name="actionLoadReference"/>
     <addaction name="actionLoadBasemap"/>
-    <addaction name="separator"/>
     <addaction name="actionExportOrtho"/>
-    <addaction name="separator"/>
     <addaction name="actionSalir"/>
    </widget>
    <widget class="QMenu" name="menuAyuda">

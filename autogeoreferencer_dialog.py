@@ -7,6 +7,7 @@ y conecta los botones a la lógica del plugin.
 """
 
 import os
+import csv
 
 from qgis.PyQt import QtWidgets, QtGui, QtCore, uic
 from qgis.core import (
@@ -107,7 +108,6 @@ class RasterReferenceDialog(QtWidgets.QDialog):
 
         self.btnOpenRasterMgr = QtWidgets.QPushButton("Administrador raster...", self)
         try:
-            
             icon = QgsApplication.getThemeIcon("mIconDataSourceManager.svg")
             if not icon.isNull():
                 self.btnOpenRasterMgr.setIcon(icon)
@@ -127,11 +127,9 @@ class RasterReferenceDialog(QtWidgets.QDialog):
 
         layout.addLayout(bottom_layout)
 
-
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         self.btnOpenRasterMgr.clicked.connect(self._on_open_raster_manager)
-
 
         self._populate_layers()
 
@@ -167,11 +165,10 @@ class RasterReferenceDialog(QtWidgets.QDialog):
                 "no se ha pasado la interfaz de QGIS (iface).",
             )
             return
-        
+
         try:
             self.iface.openDataSourceManagerPage("raster")
         except AttributeError:
-
             try:
                 self.iface.showDataSourceManager()
             except AttributeError:
@@ -228,11 +225,14 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         self._rect_tool = None
         self._prev_map_tool = None
 
+        # Para resultados del matching
+        self.current_homography = None   # matriz de transformación (3x3)
+        self.current_gcps = []           # lista de puntos de control / matches
+
         # Ajustar proporciones del splitter si existe
         try:
             self.splitterMain.setSizes([300, 700])
         except AttributeError:
-
             pass
 
         # =========================
@@ -262,6 +262,17 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         # Botón GET MATCHES >
         try:
             self.btnNextStep.clicked.connect(self.run_matching_from_ui)
+        except AttributeError:
+            pass
+
+        # Botones de exportación (matriz y GCPs)
+        try:
+            self.btnExportTransform.clicked.connect(self._export_transform_matrix)
+        except AttributeError:
+            pass
+
+        try:
+            self.btnExportGCPs.clicked.connect(self._export_gcps)
         except AttributeError:
             pass
 
@@ -358,7 +369,6 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         # Guardar ruta de imagen y pixmap
         self._load_reference_pixmap_from_layer(layer)
         self._update_reference_preview()
-
 
     def _load_reference_pixmap_from_layer(self, layer: QgsRasterLayer):
         """
@@ -482,14 +492,11 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         if canvas is None:
             return
 
-
         ms = canvas.mapSettings()
         ms.setExtent(rect)
 
-
         size = QtCore.QSize(512, 512)
         ms.setOutputSize(size)
-
 
         img = QtGui.QImage(size, QtGui.QImage.Format_ARGB32_Premultiplied)
         img.fill(QtCore.Qt.transparent)
@@ -524,7 +531,6 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
             self._ref_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
         except Exception:
             pass
-
 
     # ------------------------------------------------------------------
     # ACTUALIZACIÓN DE PREVISUALIZACIONES
@@ -597,6 +603,7 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         Muestra:
           - Imagen de matches en tab 'Matches'
           - RMSE en label_rmse_value
+          - Matriz de transformación en label_status_value
         """
         # Comprobar imagen flotante
         float_path = ""
@@ -640,8 +647,9 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         else:
             matcher_type = "auto"
 
+        # Corregido: spinRatioTest (como en el .ui)
         try:
-            ratio_thresh = float(self.spinRatio.value())
+            ratio_thresh = float(self.spinRatioTest.value())
         except AttributeError:
             ratio_thresh = 0.75
 
@@ -655,7 +663,7 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         except Exception:
             pass
 
-        # Llamar al motor para obtener detalles (incluye RMSE)
+        # Llamar al motor para obtener detalles (incluye RMSE y, si está implementado, homografía y GCPs)
         try:
             details = feature_matcher_cv.match_details(
                 float_path,
@@ -672,18 +680,51 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
                 "Error en matching",
                 f"Ocurrió un error al ejecutar el motor de matching:\n{e}",
             )
+            try:
+                self.label_status_value.setText("Error en matching")
+                self.progressBar.setValue(0)
+            except Exception:
+                pass
             return
 
+        # Extraer RMSE
         rmse = details.get("rmse", None)
 
-        # Actualizar RMSE en la UI
+        # Extraer matriz de transformación si el motor la devuelve
+        H = (
+            details.get("homography")
+            or details.get("H")
+            or details.get("transform")
+            or details.get("transform_matrix")
+        )
+
+        # Extraer puntos de control / GCPs si existen en el dict
+        gcps = (
+            details.get("gcps")
+            or details.get("control_points")
+            or details.get("points")
+            or []
+        )
+
+        # Guardar en atributos
+        self.current_homography = H
+        # Forzamos lista para evitar problemas si viene como None
+        self.current_gcps = list(gcps) if gcps else []
+
+        # Actualizar matriz + RMSE en la UI
         try:
-            if rmse is None:
-                self.label_rmse_value.setText("-")
-            else:
-                self.label_rmse_value.setText(f"{rmse:.3f}")
-        except AttributeError:
-            pass
+            self.update_transform_matrix(H, rmse)
+        except Exception:
+            # Fallback mínimo si algo falla en el formateo
+            try:
+                if rmse is None:
+                    self.label_rmse_value.setText("-")
+                    self.label_status_value.setText("Matching completado (sin RMSE / sin matriz)")
+                else:
+                    self.label_rmse_value.setText(f"{rmse:.3f}")
+                    self.label_status_value.setText(f"Matching completado (RMSE={rmse:.3f})")
+            except Exception:
+                pass
 
         # Dibujar imagen de matches con el motor
         params_for_draw = {
@@ -708,6 +749,11 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
                 "Error al dibujar matches",
                 f"Se han calculado los matches, pero no se pudo generar la imagen de visualización:\n{e}",
             )
+            # Aun así actualizamos la barra de progreso
+            try:
+                self.progressBar.setValue(100)
+            except Exception:
+                pass
             return
 
         # Convertir imagen OpenCV (BGR) a QPixmap y mostrar en labelMatchesPreview
@@ -742,13 +788,223 @@ class MainWindow(QtWidgets.QMainWindow, FORM_CLASS):
         except Exception:
             pass
 
-        # Actualizar barra de progreso y estado
+        # Actualizar barra de progreso
         try:
             self.progressBar.setValue(100)
-            if rmse is not None:
-                self.label_status_value.setText(f"Matching completado (RMSE={rmse:.3f})")
-            else:
-                self.label_status_value.setText("Matching completado (sin RMSE)")
         except Exception:
             pass
 
+    # ------------------------------------------------------------------
+    # MATRIZ DE TRANSFORMACIÓN: ACTUALIZAR UI
+    # ------------------------------------------------------------------
+    def update_transform_matrix(self, H, rmse=None):
+        """
+        Actualiza la etiqueta de matriz de transformación y el RMSE.
+
+        H: matriz 3x3 (numpy array o lista de listas) o None
+        rmse: error medio (float) opcional
+        """
+        # Matriz
+        text = self._format_matrix_for_label(H)
+        try:
+            self.label_status_value.setText(text)
+        except Exception:
+            pass
+
+        # RMSE
+        try:
+            if rmse is not None:
+                self.label_rmse_value.setText(f"{rmse:.3f}")
+            else:
+                # Si no hay RMSE, mantenemos '-'
+                self.label_rmse_value.setText("-")
+        except Exception:
+            pass
+
+    def _format_matrix_for_label(self, H):
+        """
+        Devuelve la matriz formateada en varias líneas, tipo:
+
+        [   1.000    0.002  -30.123]
+        [   0.001    0.999   12.456]
+        [   0.000    0.000    1.000]
+
+        Si H es None, devuelve '(sin calcular)'.
+        """
+        if H is None:
+            return "(sin calcular)"
+
+        # Intentar convertir numpy array a lista de listas si es necesario
+        try:
+            import numpy as np
+            if isinstance(H, np.ndarray):
+                H = H.tolist()
+        except Exception:
+            pass
+
+        # Si por lo que sea no es iterable, devolvemos str
+        try:
+            rows_iter = list(H)
+        except TypeError:
+            return str(H)
+
+        rows = []
+        for row in rows_iter:
+            # Convertir cada elemento a float, si es posible
+            formatted = []
+            for v in row:
+                try:
+                    formatted.append(f"{float(v):8.3f}")
+                except Exception:
+                    formatted.append(str(v))
+            row_str = "  ".join(formatted)
+            rows.append(f"[{row_str}]")
+        return "\n".join(rows)
+
+    # ------------------------------------------------------------------
+    # EXPORTAR MATRIZ DE TRANSFORMACIÓN
+    # ------------------------------------------------------------------
+    def _export_transform_matrix(self):
+        """
+        Exporta la matriz de transformación actual (self.current_homography)
+        a un fichero CSV o TXT.
+        """
+        if self.current_homography is None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Exportar matriz",
+                "No hay ninguna matriz de transformación calculada.",
+            )
+            return
+
+        path, flt = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            "Guardar matriz de transformación",
+            "",
+            "CSV (*.csv);;Texto (*.txt)",
+        )
+        if not path:
+            return
+
+        # Normalizar extensión si el usuario no la pone
+        if os.path.splitext(path)[1] == "" and "CSV" in flt.upper():
+            path = path + ".csv"
+
+        # Convertir a lista de listas si viene como numpy array
+        H = self.current_homography
+        try:
+            import numpy as np
+            if isinstance(H, np.ndarray):
+                H = H.tolist()
+        except Exception:
+            pass
+
+        try:
+            lines = []
+            for row in H:
+                # Si row no es iterable, escribir tal cual
+                try:
+                    iter(row)
+                except TypeError:
+                    lines.append(str(row))
+                    continue
+
+                vals = []
+                for v in row:
+                    try:
+                        vals.append(str(float(v)))
+                    except Exception:
+                        vals.append(str(v))
+                lines.append(",".join(vals))
+
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+
+            QtWidgets.QMessageBox.information(
+                self,
+                "Exportar matriz",
+                f"Matriz de transformación guardada en:\n{path}",
+            )
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al exportar matriz",
+                f"No se pudo guardar la matriz de transformación:\n{e}",
+            )
+
+    # ------------------------------------------------------------------
+    # EXPORTAR PUNTOS DE CONTROL / GCPs
+    # ------------------------------------------------------------------
+    def _export_gcps(self):
+        """
+        Exporta los puntos de control actuales (self.current_gcps) a CSV.
+
+        Se asume que self.current_gcps es:
+          - una lista de dicts, o
+          - una lista de tuplas/listas (se crean columnas genéricas).
+        """
+        if not self.current_gcps:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Exportar puntos de control",
+                "No hay puntos de control para exportar.",
+            )
+            return
+
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            "Guardar puntos de control",
+            "",
+            "CSV (*.csv)",
+        )
+        if not path:
+            return
+
+        if os.path.splitext(path)[1] == "":
+            path = path + ".csv"
+
+        gcps = self.current_gcps
+
+        try:
+            # Caso 1: lista de dicts
+            if isinstance(gcps[0], dict):
+                fieldnames = list(gcps[0].keys())
+                with open(path, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for g in gcps:
+                        writer.writerow(g)
+
+            # Caso 2: lista de tuplas/listas
+            else:
+                first = gcps[0]
+                try:
+                    n_cols = len(first)
+                except TypeError:
+                    # Si no es iterable, lo volcamos como una sola columna
+                    n_cols = 1
+
+                fieldnames = [f"col{i+1}" for i in range(n_cols)]
+                with open(path, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(fieldnames)
+                    for g in gcps:
+                        if n_cols == 1:
+                            writer.writerow([g])
+                        else:
+                            try:
+                                writer.writerow(list(g))
+                            except Exception:
+                                writer.writerow([str(g)])
+
+            QtWidgets.QMessageBox.information(
+                self,
+                "Exportar puntos de control",
+                f"Puntos de control guardados en:\n{path}",
+            )
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al exportar puntos de control",
+                f"No se pudo guardar el archivo CSV de puntos de control:\n{e}",
+            )
