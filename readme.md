@@ -6,7 +6,7 @@
 `autoGeocorrection` es una herramienta diseñada para automatizar la geocorrección / ortorrectificación de imágenes **sin necesidad de puntos de control manuales**.  
 El sistema detecta automáticamente características (features) en la imagen “flotante” y en la imagen de referencia, calcula una homografía o transformación óptima, evalúa su calidad y genera una versión ortorrectificada lista para usar en SIG.
 
-Aunque puede emplearse con datos EMIT u otras misiones, **no está limitado a mineralogía**: funciona con *cualquier imagen raster* (drones, satélite, escáner, fotografías aéreas, etc.).
+
 
 ## Características principales  
 - **Detección automática de features** (AKAZE / ORB / otros) tanto en la imagen flotante como en la referencia.  
